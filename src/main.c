@@ -64,12 +64,6 @@ void print_host()
     else printf("(hostname failed?)");
 }
 
-//TODO: Delete this function, temporary for segfault testing with test.out.
-void sighandl(int signum)
-{
-    printf("Process %d got signal %d\n", getpid(), signum);
-}
-
 int main(/*int argc, char *argv[]*/)
 {
     //TODO: Delete and print real message
