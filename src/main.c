@@ -8,6 +8,8 @@
 #include <sys/wait.h>
 #include <pwd.h>
 
+#include "utils.h"
+
 //TODO: remove all '//' comments
 //~ #include <readline/readline.h>
 //~ #include <readline/history.h>
@@ -64,9 +66,9 @@ void print_host()
     else printf("(hostname failed?)");
 }
 
+
 int main(/*int argc, char *argv[]*/)
 {
-    //TODO: Delete and print real message
     char line[MAX_LENGTH];
     int n = 0;
     char *args[MAX_ARGS];
@@ -76,8 +78,10 @@ int main(/*int argc, char *argv[]*/)
     int i;
     int total_len;
     char cmd[MAX_LENGTH];
+    /* welcoming message */
+    //TODO: print welcoming message
 
-    printf("hi! host src:"HOST_SRC"\n"); //DEL
+    init();
     r = malloc(MAX_LENGTH * sizeof(char));
 
     while (1) {
@@ -92,11 +96,12 @@ int main(/*int argc, char *argv[]*/)
         if (!fgets(line, MAX_LENGTH, stdin)) break;
 
         n = 0;
-        for (i = 0; i < MAX_ARGS; ++i) lengths[i]=0;
+        for (i = 0; i < MAX_ARGS; ++i) lengths[i] = 0;
         total_len = 0;
         /* WARNING! strtok modifies the initial string */
         r = strtok(line, " \n");
         args[n++] = r;
+
         while ((r = strtok(NULL, " \n")) && n < MAX_ARGS) {
             lengths[n] += strlen(r);
             total_len += lengths[n];
@@ -105,15 +110,21 @@ int main(/*int argc, char *argv[]*/)
         }
         args[n] = NULL;
 
+        //TODO: check if command is a builtin
+        /* check if command is a builtin
+         * args[0] currently holds the 'main' command */
+        if (check_builtins(args[0]) >= 0) {
+            printf("built in!\n");
+            continue;
+        }
+        else {}
+
         sprintf(cmd, TEMP_PATH"%s", args[0]);
-        //~ printf("final command: %s\nresult:\n", cmd);
 
         pid = fork();
         if (pid == -1) {
             perror("fork");
         } else if (pid == 0) {
-            //TODO: Del, is temp
-            signal(SIGSEGV, sighandl);
             /* child */
             if (execv(cmd, args) < 0) {
                 /* execv returns error */
@@ -126,7 +137,7 @@ int main(/*int argc, char *argv[]*/)
             int status;
             waitpid(pid, &status, 0);
             //~ printf("exit status: %d\n", WEXITSTATUS(status));
-            if (WIFSIGNALED(status)){
+            if (WIFSIGNALED(status)) {
                 /* child process was terminated by a signal
                  * print to stderr the termination signal message */
                 psignal(WTERMSIG(status), args[0]);
