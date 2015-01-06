@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 #include <pwd.h>
 
+//TODO: remove all '//' comments
 //~ #include <readline/readline.h>
 //~ #include <readline/history.h>
 //~ #include <sys/time.h>
