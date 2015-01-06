@@ -1,13 +1,41 @@
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #define BUILTINS_NUM 3
+#define UNUSED(x) (void)(x)
+
+enum {
+    EXIT_CALL = 0,
+    CD_CALL,
+    JOBS_CALL
+} builtin_names;
+
 const char *builtins[BUILTINS_NUM];
-const void *handle_builtins[BUILTINS_NUM];
+//~ void (*handle_builtins[BUILTINS_NUM]) (void *_p);
+
+void shell_exit()
+{
+    /* kill all background processes first and then exit shell */
+    exit(0);
+}
+
+void change_directory(char *dir)
+{
+    UNUSED(dir);
+}
+
+void jobs()
+{
+}
 
 void init()
 {
     /* initialize builtins array */
-    builtins[0] = "exit";
-    builtins[1] = "cd";
-    builtins[2] = "jobs";
+
+    builtins[EXIT_CALL] = "exit";
+    builtins[CD_CALL] = "cd";
+    builtins[JOBS_CALL] = "jobs";
 }
 
 

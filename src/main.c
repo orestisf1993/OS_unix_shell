@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <pwd.h>
@@ -18,11 +19,7 @@
 #define MAX_LENGTH 1024
 #define MAX_ARGS 5
 
-//TODO: use real path ($PATH ??) for execution
-#define TEMP_PATH "./"
-//~ #define TEMP_PATH "/usr/bin/"
-
-char cwd[1024];
+char cwd[PATH_MAX];
 void print_cwd()
 {
     if (getcwd(cwd, sizeof(cwd)))
@@ -40,7 +37,8 @@ void print_user()
 
 /* FreeBSD does not have HOST_NAME_MAX defined.
  * TODO: use sysconf() to discover its value. */
-#if !defined(HOST_NAME_MAX) && defined(_POSIX_HOST_NAME_MAX)
+#if !defined(HOST_NAME_MAX)
+#if defined(_POSIX_HOST_NAME_MAX)
 #define HOST_NAME_MAX _POSIX_HOST_NAME_MAX
 #define HOST_SRC "HOST_NAME_MAX"
 
@@ -56,6 +54,7 @@ void print_user()
 #define HOST_NAME_MAX 256
 #define HOST_SRC "256"
 #endif
+#endif
 
 char hostname[HOST_NAME_MAX + 1];
 #undef HOST_NAME_MAX
@@ -66,24 +65,37 @@ void print_host()
     else printf("(hostname failed?)");
 }
 
-
 int main(/*int argc, char *argv[]*/)
 {
     char line[MAX_LENGTH];
     int n = 0;
+    /* args is an array of strings where args from strtok are passed */
     char *args[MAX_ARGS];
     char *r;
     int pid;
     int lengths[MAX_ARGS];
     int i;
     int total_len;
-    char cmd[MAX_LENGTH];
+    char **paths = NULL;
+    int path_count = 0;
+    char *path_variable;
     /* welcoming message */
     //TODO: print welcoming message
 
     init();
-    r = malloc(MAX_LENGTH * sizeof(char));
+    r = malloc(PATH_MAX * sizeof(char));
+    path_variable = malloc(PATH_MAX * sizeof(char));
 
+    strcpy(path_variable, getenv("PATH"));
+    while((r = strtok(path_count ? NULL : path_variable, ":")) != NULL) {
+        paths = (char **)realloc(paths, (path_count + 1) * sizeof(char *));
+        paths[path_count++] = r;
+    }
+
+    for (i = 0; i < path_count; ++i) printf("path %d: %s\n", i, paths[i]);
+
+    free(path_variable);
+    r = realloc(r, MAX_LENGTH * sizeof(char));
     while (1) {
         print_user();
         printf("@");
@@ -116,17 +128,14 @@ int main(/*int argc, char *argv[]*/)
         if (check_builtins(args[0]) >= 0) {
             printf("built in!\n");
             continue;
-        }
-        else {}
-
-        sprintf(cmd, TEMP_PATH"%s", args[0]);
+        } else {}
 
         pid = fork();
         if (pid == -1) {
             perror("fork");
         } else if (pid == 0) {
             /* child */
-            if (execv(cmd, args) < 0) {
+            if (execvp(args[0], args) < 0) {
                 /* execv returns error */
                 //~ fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
                 perror(args[0]);
