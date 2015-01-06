@@ -14,6 +14,7 @@
 #define MAX_LENGTH 1024
 #define MAX_ARGS 5
 
+//TODO: use real path for execution
 #define TEMP_PATH "/usr/bin/"
 
 char cwd[1024];
@@ -62,7 +63,8 @@ void print_host()
 
 int main(/*int argc, char *argv[]*/)
 {
-    printf("hi! host src:"HOST_SRC"\n");
+    //TODO: Delete and print real message
+    printf("hi! host src:"HOST_SRC"\n"); //DEL
     char line[MAX_LENGTH];
     char *r;
     r = malloc(MAX_LENGTH * sizeof(char));
@@ -93,9 +95,6 @@ int main(/*int argc, char *argv[]*/)
         }
         args[n] = NULL;
 
-        //~ for (int i = 0; i < n; ++i) printf("%s ", args[i]);
-        //~ printf("\n");
-
         char *cmd = malloc((sizeof("/bin/") + lengths[0]) * sizeof(char));
         sprintf(cmd, TEMP_PATH"%s", args[0]);
         //~ printf("final command: %s\nresult:\n", cmd);
@@ -109,6 +108,8 @@ int main(/*int argc, char *argv[]*/)
             case 0:
                 /* child */
                 execv(cmd, args);
+                //TODO: find real reason command is crushing
+                printf("command not found");
                 exit(EXIT_FAILURE);   /* exec never returns */
             default:
                 /* parent */
