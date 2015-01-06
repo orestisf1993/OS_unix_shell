@@ -1,10 +1,10 @@
-#define _BSD_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-//~ #include <sys/types.h>
+#include <signal.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <pwd.h>
 
@@ -63,15 +63,26 @@ void print_host()
     else printf("(hostname failed?)");
 }
 
+//TODO: Delete this function, temporary for segfault testing with test.out.
+void sighandl(int signum)
+{
+    printf("Process %d got signal %d\n", getpid(), signum);
+}
+
 int main(/*int argc, char *argv[]*/)
 {
     //TODO: Delete and print real message
-    printf("hi! host src:"HOST_SRC"\n"); //DEL
     char line[MAX_LENGTH];
-    char *r;
-    r = malloc(MAX_LENGTH * sizeof(char));
     int n = 0;
     char *args[MAX_ARGS];
+    char *r;
+    int pid;
+    int lengths[MAX_ARGS];
+    int i;
+    int total_len;
+
+    printf("hi! host src:"HOST_SRC"\n"); //DEL
+    r = malloc(MAX_LENGTH * sizeof(char));
 
     while (1) {
         print_user();
@@ -85,8 +96,8 @@ int main(/*int argc, char *argv[]*/)
         if (!fgets(line, MAX_LENGTH, stdin)) break;
 
         n = 0;
-        int lengths[MAX_ARGS] = {0};
-        int total_len = 0;
+        for (i = 0; i < MAX_ARGS; ++i) lengths[i]=0;
+        total_len = 0;
         /* WARNING! strtok modifies the initial string */
         r = strtok(line, " \n");
         args[n++] = r;
@@ -102,21 +113,29 @@ int main(/*int argc, char *argv[]*/)
         sprintf(cmd, TEMP_PATH"%s", args[0]);
         //~ printf("final command: %s\nresult:\n", cmd);
 
-        int pid = fork();
+        pid = fork();
         if (pid == -1) {
-            fprintf(stderr, "ERROR FORKING!\n");
+            perror("fork");
         } else if (pid == 0) {
+            //TODO: Del, is temp
+            signal(SIGSEGV, sighandl);
             /* child */
             if (execv(cmd, args) < 0) {
                 /* execv returns error */
                 //~ fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
-                perror("ls");
-                exit(EXIT_FAILURE);   /* exec never returns */
+                perror(args[0]);
+                _exit(EXIT_FAILURE);   /* exec never returns */
             }
         } else {
             /* parent */
             int status;
             waitpid(pid, &status, 0);
+            //~ printf("exit status: %d\n", WEXITSTATUS(status));
+            if (WIFSIGNALED(status)){
+                /* child process was terminated by a signal
+                 * print to stderr the termination signal message */
+                psignal(WTERMSIG(status), NULL);
+            }
         }
     }
     return 0;
