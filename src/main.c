@@ -109,7 +109,8 @@ int main(/*int argc, char *argv[]*/)
             /* child */
             if (execv(cmd, args) < 0) {
                 /* execv returns error */
-                fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
+                //~ fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
+                perror("ls");
                 exit(EXIT_FAILURE);   /* exec never returns */
             }
         } else {
