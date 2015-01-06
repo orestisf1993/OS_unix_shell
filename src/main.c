@@ -81,6 +81,7 @@ int main(/*int argc, char *argv[]*/)
     int lengths[MAX_ARGS];
     int i;
     int total_len;
+    char cmd[MAX_LENGTH];
 
     printf("hi! host src:"HOST_SRC"\n"); //DEL
     r = malloc(MAX_LENGTH * sizeof(char));
@@ -110,7 +111,6 @@ int main(/*int argc, char *argv[]*/)
         }
         args[n] = NULL;
 
-        char *cmd = malloc((sizeof("/bin/") + lengths[0]) * sizeof(char));
         sprintf(cmd, TEMP_PATH"%s", args[0]);
         //~ printf("final command: %s\nresult:\n", cmd);
 
@@ -135,7 +135,7 @@ int main(/*int argc, char *argv[]*/)
             if (WIFSIGNALED(status)){
                 /* child process was terminated by a signal
                  * print to stderr the termination signal message */
-                psignal(WTERMSIG(status), NULL);
+                psignal(WTERMSIG(status), args[0]);
             }
         }
     }
