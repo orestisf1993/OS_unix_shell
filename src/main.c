@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 //~ #include <sys/types.h>
 #include <sys/wait.h>
 #include <pwd.h>
@@ -14,8 +15,9 @@
 #define MAX_LENGTH 1024
 #define MAX_ARGS 5
 
-//TODO: use real path for execution
-#define TEMP_PATH "/usr/bin/"
+//TODO: use real path ($PATH ??) for execution
+#define TEMP_PATH "./"
+//~ #define TEMP_PATH "/usr/bin/"
 
 char cwd[1024];
 void print_cwd()
@@ -77,8 +79,9 @@ int main(/*int argc, char *argv[]*/)
         print_host();
         printf(":");
         print_cwd();
-        printf("$");
-        
+        printf("$ ");
+
+        //TODO: use gnu readline
         if (!fgets(line, MAX_LENGTH, stdin)) break;
 
         n = 0;
@@ -100,22 +103,20 @@ int main(/*int argc, char *argv[]*/)
         //~ printf("final command: %s\nresult:\n", cmd);
 
         int pid = fork();
-        int status;
-        switch (pid) {
-            case -1:
-                printf("ERROR FORKING!\n");
-                break;
-            case 0:
-                /* child */
-                execv(cmd, args);
-                //TODO: find real reason command is crushing
-                printf("command not found");
+        if (pid == -1) {
+            fprintf(stderr, "ERROR FORKING!\n");
+        } else if (pid == 0) {
+            /* child */
+            if (execv(cmd, args) < 0) {
+                /* execv returns error */
+                fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
                 exit(EXIT_FAILURE);   /* exec never returns */
-            default:
-                /* parent */
-                waitpid(pid, &status, 0);
+            }
+        } else {
+            /* parent */
+            int status;
+            waitpid(pid, &status, 0);
         }
-
     }
     return 0;
 }
