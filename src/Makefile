@@ -1,3 +1,3 @@
-TARGET=main
 all:
-	gcc -Wall -Wextra -pedantic -o $(TARGET).out main.c
+	gcc -Wall -Wextra -pedantic -o shell main.c
+	gcc -o t test.c

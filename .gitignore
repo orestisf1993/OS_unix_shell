@@ -1,3 +1,6 @@
 *.out
 .geanyprj
 fuse_hidden*
+shell
+t
+test.c
