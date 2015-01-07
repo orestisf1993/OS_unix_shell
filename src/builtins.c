@@ -2,6 +2,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "utils.h"
+
 #define BUILTINS_NUM 3
 #define UNUSED(x) (void)(x)
 
@@ -14,9 +16,22 @@ enum {
 const char *builtins[BUILTINS_NUM];
 //~ void (*handle_builtins[BUILTINS_NUM]) (void *_p);
 
+
+void free_all()
+{
+    process *p;
+    process *pr;
+    pr = head;
+    for (p = head->next; p != NULL; p = p->next) {
+        free(pr);
+        pr = p;
+    }
+}
+
 void shell_exit()
 {
     /* kill all background processes first and then exit shell */
+    free_all();
     exit(0);
 }
 
