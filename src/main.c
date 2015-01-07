@@ -82,6 +82,17 @@ void list_all()
     }
 }
 
+void free_all()
+{
+    process *p;
+    process *pr;
+    pr = head;
+    for (p = head->next; p != NULL; p = p->next) {
+        free(pr);
+        pr = p;
+    }
+}
+
 int main(/*int argc, char *argv[]*/)
 {
     process *current;
@@ -200,5 +211,6 @@ int main(/*int argc, char *argv[]*/)
             list_all();
         }
     }
+    //TODO: free some memory ;)
     return 0;
 }
