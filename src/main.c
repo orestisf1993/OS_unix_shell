@@ -39,6 +39,27 @@ void print_host()
     else printf("(hostname failed?)");
 }
 
+void print_prompt()
+{
+    print_user();
+    printf("@");
+    print_host();
+    printf(":");
+    print_cwd();
+    printf("$ ");
+}
+
+void mass_signal_set(sighandler_t handler)
+{
+    /* sets all interactive and job-control signals to a specific value */
+    signal (SIGINT,  handler);
+    signal (SIGQUIT, handler);
+    signal (SIGTSTP, handler);
+    signal (SIGTTIN, handler);
+    signal (SIGTTOU, handler);
+    signal (SIGCHLD, handler);
+}
+
 int check_background(char *s)
 {
     /* if the last char is an ampersand replace it with '\0' */
@@ -48,17 +69,6 @@ int check_background(char *s)
         return 1;
     } else return 0;
 }
-
-//~ void starting()
-//~ {
-    //~ /* Ignore interactive and job-control signals.  */
-    //~ signal (SIGINT, SIG_IGN);
-    //~ signal (SIGQUIT, SIG_IGN);
-    //~ signal (SIGTSTP, SIG_IGN);
-    //~ signal (SIGTTIN, SIG_IGN);
-    //~ signal (SIGTTOU, SIG_IGN);
-    //~ signal (SIGCHLD, SIG_IGN);
-//~ }
 
 int main(/*int argc, char *argv[]*/)
 {
@@ -79,7 +89,6 @@ int main(/*int argc, char *argv[]*/)
     /* welcoming message */
     //TODO: print welcoming message
 
-    //~ starting();
     init();
     r = malloc(PATH_MAX * sizeof(char));
     path_variable = malloc(PATH_MAX * sizeof(char));
@@ -95,12 +104,7 @@ int main(/*int argc, char *argv[]*/)
     free(path_variable);
     r = realloc(r, MAX_LENGTH * sizeof(char));
     while (1) {
-        print_user();
-        printf("@");
-        print_host();
-        printf(":");
-        print_cwd();
-        printf("$ ");
+        print_prompt();
 
         //TODO: use gnu readline
         if (!fgets(line, MAX_LENGTH, stdin)) break;

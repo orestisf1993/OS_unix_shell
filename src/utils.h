@@ -7,22 +7,20 @@ int check_builtins(char *cmd);
 #define MAX_LENGTH 1024
 #define MAX_ARGS 5
 
-/* a single process.  */
+/* a single process. */
 typedef struct process
 {
-  struct process *next;   /* next process */
-  char *args[MAX_ARGS + 1];            /* for execvp */
-  pid_t pid;              /* process ID */
-  char completed;         /* true if process has completed */
-  char stopped;           /* true if process has stopped */
-  int status;             /* reported status value */
+  struct process *next;     /* next process */
+  char *args[MAX_ARGS + 1]; /* for execvp */
+  pid_t pid;                /* process ID */
+  char completed;           /* true if process has completed */
+  char stopped;             /* true if process has stopped */
+  int status;               /* reported status value */
 } process;
-
 
 char cwd[PATH_MAX];
 
-/* FreeBSD does not have HOST_NAME_MAX defined.
- * TODO: use sysconf() to discover its value. */
+/* define HOST_NAME_MAX if it is not already defined */
 #if !defined(HOST_NAME_MAX)
 #if defined(_POSIX_HOST_NAME_MAX)
 #define HOST_NAME_MAX _POSIX_HOST_NAME_MAX
