@@ -65,17 +65,29 @@ void print_host()
     else printf("(hostname failed?)");
 }
 
+int check_background(char *s){
+    /* if the last char is an ampersand replace it with '\0' */
+    int last = strlen(s) - 1;
+    if (s[last] == '&'){
+        s[last] = 0;
+        return 1;
+    }
+    else return 0;
+}
+
 int main(/*int argc, char *argv[]*/)
 {
     char line[MAX_LENGTH];
     int n = 0;
     /* args is an array of strings where args from strtok are passed */
-    char *args[MAX_ARGS];
+    char *args[MAX_ARGS+1];
     char *r;
     int pid;
+    //TODO: delete lengths because they are pretty much useless
     int lengths[MAX_ARGS];
     int i;
     int total_len;
+    int run_background;
     char **paths = NULL;
     int path_count = 0;
     char *path_variable;
@@ -120,7 +132,7 @@ int main(/*int argc, char *argv[]*/)
 
             args[n++] = r;
         }
-        args[n] = NULL;
+        
 
         //TODO: check if command is a builtin
         /* check if command is a builtin
@@ -130,6 +142,12 @@ int main(/*int argc, char *argv[]*/)
             continue;
         } else {}
 
+        if ((run_background = check_background(args[n-1]))){
+            /* if args[n-1] was only an '&', we dont' need the string */
+            if (args[n-1][0] == 0) n--;
+        }
+        args[n] = NULL;
+        
         pid = fork();
         if (pid == -1) {
             perror("fork");
