@@ -49,7 +49,7 @@ void print_prompt()
     printf("$ ");
 }
 
-void mass_signal_set(sighandler_t handler)
+void mass_signal_set(__sighandler_t handler)
 {
     /* sets all interactive and job-control signals to a specific value */
     signal (SIGINT,  handler);
@@ -70,8 +70,21 @@ int check_background(char *s)
     } else return 0;
 }
 
+void list_all()
+{
+    process *p;
+    printf("pid completed status\n");
+    for (p = head; p != NULL; p = p->next) {
+        printf("%d", p->pid);
+        if (p->pid) printf(" %d %d", p->completed, p->status);
+        else printf(" MASTER MASTER");
+        printf("\n");
+    }
+}
+
 int main(/*int argc, char *argv[]*/)
 {
+    process *current;
     char line[MAX_LENGTH];
     int n = 0;
     /* args is an array of strings where args from strtok are passed */
@@ -86,7 +99,7 @@ int main(/*int argc, char *argv[]*/)
     char **paths = NULL;
     int path_count = 0;
     char *path_variable;
-    /* welcoming message */
+    /* welcoming message (?)*/
     //TODO: print welcoming message
 
     init();
@@ -99,10 +112,26 @@ int main(/*int argc, char *argv[]*/)
         paths[path_count++] = r;
     }
 
-    for (i = 0; i < path_count; ++i) printf("path %d: %s\n", i, paths[i]);
+    //~ for (i = 0; i < path_count; ++i) printf("path %d: %s\n", i, paths[i]);
 
     free(path_variable);
     r = realloc(r, MAX_LENGTH * sizeof(char));
+
+    master.pid = 0;
+    master.next = NULL;
+    current = &master;
+    head = current;
+
+    //~ for(i = 0; i < 5; ++i) {
+        //~ current = malloc(sizeof(process));
+        //~ current->pid = i + 5;
+        //~ current->completed = 1;
+        //~ current->status = (i + 20) * 5;
+        //~ current->next  = head;
+        //~ head = current;
+    //~ }
+    //~ list_all();
+
     while (1) {
         print_prompt();
 
@@ -144,6 +173,7 @@ int main(/*int argc, char *argv[]*/)
             exit(1);
         } else if (pid == 0) {
             /* child */
+
             if (execvp(args[0], args) < 0) {
                 /* execv returns error */
                 //~ fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
@@ -152,6 +182,7 @@ int main(/*int argc, char *argv[]*/)
             }
         } else {
             /* parent */
+
             int status;
             waitpid(pid, &status, 0);
             if (WIFSIGNALED(status)) {
@@ -159,6 +190,14 @@ int main(/*int argc, char *argv[]*/)
                  * print to stderr the termination signal message */
                 psignal(WTERMSIG(status), args[0]);
             }
+
+            current = malloc(sizeof(process));
+            current->pid = pid;
+            current->completed = 1;
+            current->status = status;
+            current->next  = head;
+            head = current;
+            list_all();
         }
     }
     return 0;
