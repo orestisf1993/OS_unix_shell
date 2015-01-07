@@ -1,6 +1,7 @@
 *.out
 .geanyprj
-fuse_hidden*
+.fuse_hidden*
 shell
 t
-test.c
+wt
+*test.c
