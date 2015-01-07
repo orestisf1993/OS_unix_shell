@@ -1,22 +1,27 @@
 #ifndef SHELL_UTILS
 #define SHELL_UTILS
+
+#include <limits.h>
+#include <sys/types.h>
+
 void init();
 int check_builtins(char *cmd);
-#endif
+
 
 #define MAX_LENGTH 1024
 #define MAX_ARGS 5
 
 /* a single process. */
 typedef struct process {
-    //~ struct process *previous;
     struct process *next;     /* next process */
-    char *args[MAX_ARGS + 1]; /* for execvp */
     pid_t pid;                /* process ID */
     int completed;           /* true if process has completed */
-    //~ int stopped;             /* true if process has stopped */
     int status;               /* reported status value */
 } process;
+
+typedef struct cleanup{
+    char *r;
+} cleanup;
 
 process master;
 process *head;
@@ -42,3 +47,4 @@ char cwd[PATH_MAX];
 #endif
 #endif
 char hostname[HOST_NAME_MAX + 1];
+#endif

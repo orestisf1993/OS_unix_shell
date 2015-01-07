@@ -4,8 +4,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
-#include <limits.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <pwd.h>
 
@@ -82,15 +80,40 @@ void list_all()
     }
 }
 
-void free_all()
+
+process *get_from_pid(pid_t given)
 {
     process *p;
-    process *pr;
-    pr = head;
-    for (p = head->next; p != NULL; p = p->next) {
-        free(pr);
-        pr = p;
+    for (p = head; p != NULL; p = p->next) {
+        if (p->pid == given) return p;
     }
+    return NULL;
+}
+
+void harvest_dead_children()
+{
+    process *p;
+    pid_t target;
+    int status;
+    target = waitpid(-1, &status, WNOHANG);
+    if (target < 0) return;
+
+    if (WIFSIGNALED(status)) {
+        /* child process was terminated by a signal
+         * print to stderr the termination signal message */
+        psignal(WTERMSIG(status), NULL);
+    }
+    
+    printf("target=%d status=%d\n", target, status);
+    p = get_from_pid(target);
+    printf("child %d died ", target);
+    if (!p) printf("ERROR: terminated child not found in process linked list\n");
+    else {
+        printf(" check: %d\n", p->pid);
+        p->completed = 1;
+        p->status = status;
+    }
+
 }
 
 int main(/*int argc, char *argv[]*/)
@@ -134,14 +157,17 @@ int main(/*int argc, char *argv[]*/)
     head = current;
 
     //~ for(i = 0; i < 5; ++i) {
-        //~ current = malloc(sizeof(process));
-        //~ current->pid = i + 5;
-        //~ current->completed = 1;
-        //~ current->status = (i + 20) * 5;
-        //~ current->next  = head;
-        //~ head = current;
+    //~ current = malloc(sizeof(process));
+    //~ current->pid = i + 5;
+    //~ current->completed = 1;
+    //~ current->status = (i + 20) * 5;
+    //~ current->next  = head;
+    //~ head = current;
     //~ }
     //~ list_all();
+
+    /* handle child death */
+    signal(SIGCHLD, harvest_dead_children);
 
     while (1) {
         print_prompt();
@@ -193,22 +219,28 @@ int main(/*int argc, char *argv[]*/)
             }
         } else {
             /* parent */
-
+            //TODO: point current to a tmp process and update it without malloc for a more generic code
             int status;
-            waitpid(pid, &status, 0);
+            int res;
+
+            current = malloc(sizeof(process));
+            current->pid = pid;
+            current->completed = 0;
+            current->next  = head;
+            head = current;
+            list_all();
+
+            res = waitpid(pid, &status, run_background ? WNOHANG : 0);
             if (WIFSIGNALED(status)) {
                 /* child process was terminated by a signal
                  * print to stderr the termination signal message */
                 psignal(WTERMSIG(status), args[0]);
             }
 
-            current = malloc(sizeof(process));
-            current->pid = pid;
-            current->completed = 1;
             current->status = status;
-            current->next  = head;
-            head = current;
-            list_all();
+            if (res) current->completed = 1;
+            if (res && res != pid) fprintf(stderr, "ERROR: pid=%d waitpid=%d", pid, res);
+
         }
     }
     //TODO: free some memory ;)
