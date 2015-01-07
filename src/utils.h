@@ -7,7 +7,7 @@ int check_builtins(char *cmd);
 /* a single process.  */
 typedef struct process
 {
-  struct process *next;   /* next process in pipeline */
+  struct process *next;   /* next process */
   char **argv;            /* for execvp */
   pid_t pid;              /* process ID */
   char completed;         /* true if process has completed */
