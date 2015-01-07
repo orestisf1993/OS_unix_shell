@@ -16,10 +16,7 @@
 //~ #include <readline/history.h>
 //~ #include <sys/time.h>
 
-#define MAX_LENGTH 1024
-#define MAX_ARGS 5
 
-char cwd[PATH_MAX];
 void print_cwd()
 {
     if (getcwd(cwd, sizeof(cwd)))
@@ -35,29 +32,6 @@ void print_user()
     else printf("(uid failed?)");
 }
 
-/* FreeBSD does not have HOST_NAME_MAX defined.
- * TODO: use sysconf() to discover its value. */
-#if !defined(HOST_NAME_MAX)
-#if defined(_POSIX_HOST_NAME_MAX)
-#define HOST_NAME_MAX _POSIX_HOST_NAME_MAX
-#define HOST_SRC "HOST_NAME_MAX"
-
-#elif defined(PATH_MAX)
-#define HOST_NAME_MAX PATH_MAX
-#define HOST_SRC "PATH_MAX"
-
-#elif defined(_SC_HOST_NAME_MAX)
-#define HOST_NAME_MAX _SC_HOST_NAME_MAX
-#define HOST_SRC "_SC_HOST_NAME_MAX"
-
-#else
-#define HOST_NAME_MAX 256
-#define HOST_SRC "256"
-#endif
-#endif
-
-char hostname[HOST_NAME_MAX + 1];
-#undef HOST_NAME_MAX
 void print_host()
 {
     if(gethostname(hostname, sizeof(hostname)) == 0)
@@ -65,25 +39,36 @@ void print_host()
     else printf("(hostname failed?)");
 }
 
-int check_background(char *s){
+int check_background(char *s)
+{
     /* if the last char is an ampersand replace it with '\0' */
     int last = strlen(s) - 1;
-    if (s[last] == '&'){
+    if (s[last] == '&') {
         s[last] = 0;
         return 1;
-    }
-    else return 0;
+    } else return 0;
 }
+
+//~ void starting()
+//~ {
+    //~ /* Ignore interactive and job-control signals.  */
+    //~ signal (SIGINT, SIG_IGN);
+    //~ signal (SIGQUIT, SIG_IGN);
+    //~ signal (SIGTSTP, SIG_IGN);
+    //~ signal (SIGTTIN, SIG_IGN);
+    //~ signal (SIGTTOU, SIG_IGN);
+    //~ signal (SIGCHLD, SIG_IGN);
+//~ }
 
 int main(/*int argc, char *argv[]*/)
 {
     char line[MAX_LENGTH];
     int n = 0;
     /* args is an array of strings where args from strtok are passed */
-    char *args[MAX_ARGS+1];
+    char *args[MAX_ARGS + 1];
     char *r;
-    int pid;
-    //TODO: delete lengths because they are pretty much useless
+    pid_t pid;
+    //TODO: delete lengths + total_len because they are pretty much useless
     int lengths[MAX_ARGS];
     int i;
     int total_len;
@@ -94,6 +79,7 @@ int main(/*int argc, char *argv[]*/)
     /* welcoming message */
     //TODO: print welcoming message
 
+    //~ starting();
     init();
     r = malloc(PATH_MAX * sizeof(char));
     path_variable = malloc(PATH_MAX * sizeof(char));
@@ -132,7 +118,7 @@ int main(/*int argc, char *argv[]*/)
 
             args[n++] = r;
         }
-        
+
 
         //TODO: check if command is a builtin
         /* check if command is a builtin
@@ -142,15 +128,16 @@ int main(/*int argc, char *argv[]*/)
             continue;
         } else {}
 
-        if ((run_background = check_background(args[n-1]))){
+        if ((run_background = check_background(args[n - 1]))) {
             /* if args[n-1] was only an '&', we dont' need the string */
-            if (args[n-1][0] == 0) n--;
+            if (args[n - 1][0] == 0) n--;
         }
         args[n] = NULL;
-        
+
         pid = fork();
         if (pid == -1) {
             perror("fork");
+            exit(1);
         } else if (pid == 0) {
             /* child */
             if (execvp(args[0], args) < 0) {
@@ -163,7 +150,6 @@ int main(/*int argc, char *argv[]*/)
             /* parent */
             int status;
             waitpid(pid, &status, 0);
-            //~ printf("exit status: %d\n", WEXITSTATUS(status));
             if (WIFSIGNALED(status)) {
                 /* child process was terminated by a signal
                  * print to stderr the termination signal message */
