@@ -14,8 +14,6 @@ enum {
 } builtin_names;
 
 const char *builtins[BUILTINS_NUM];
-//~ void (*handle_builtins[BUILTINS_NUM]) (void *_p);
-
 
 void free_all()
 {
@@ -51,6 +49,15 @@ void init()
     builtins[EXIT_CALL] = "exit";
     builtins[CD_CALL] = "cd";
     builtins[JOBS_CALL] = "jobs";
+}
+
+void handle_builtins(int x, void *data){
+    switch(x){
+        case EXIT_CALL:
+            shell_exit();
+        case CD_CALL:
+            change_directory((char*) data);
+    }
 }
 
 

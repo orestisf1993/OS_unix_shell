@@ -4,6 +4,14 @@
 #include <limits.h>
 #include <sys/types.h>
 
+#ifndef sig_t
+#ifdef __sighandler_t
+#define sig_t __sighandler_t
+#elif defined(sighandler_t)
+#define sig_t sighandler_t
+#endif
+#endif
+
 void init();
 int check_builtins(char *cmd);
 

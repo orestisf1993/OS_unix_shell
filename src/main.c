@@ -47,15 +47,21 @@ void print_prompt()
     printf("$ ");
 }
 
-void mass_signal_set(__sighandler_t handler)
+void ctrl_c_handle(){
+    //TODO: fix appearance
+    printf("\n");
+    print_prompt();
+}
+
+void mass_signal_set(sig_t handler)
 {
     /* sets all interactive and job-control signals to a specific value */
-    signal (SIGINT,  handler);
+    if (handler == SIG_DFL) signal (SIGINT,  handler);
+    else signal(SIGINT, ctrl_c_handle);
     signal (SIGQUIT, handler);
     signal (SIGTSTP, handler);
     signal (SIGTTIN, handler);
     signal (SIGTTOU, handler);
-    signal (SIGCHLD, handler);
 }
 
 int check_background(char *s)
@@ -137,6 +143,7 @@ int main(/*int argc, char *argv[]*/)
     //TODO: print welcoming message
 
     init();
+    //TODO: delete path analyzing or find a use for it
     r = malloc(PATH_MAX * sizeof(char));
     path_variable = malloc(PATH_MAX * sizeof(char));
 
@@ -170,9 +177,11 @@ int main(/*int argc, char *argv[]*/)
     signal(SIGCHLD, harvest_dead_children);
 
     while (1) {
+        mass_signal_set(SIG_IGN);
         print_prompt();
 
         //TODO: use gnu readline
+        //TODO: handle empty line
         if (!fgets(line, MAX_LENGTH, stdin)) break;
 
         n = 0;
@@ -210,7 +219,7 @@ int main(/*int argc, char *argv[]*/)
             exit(1);
         } else if (pid == 0) {
             /* child */
-
+            mass_signal_set(SIG_DFL);
             if (execvp(args[0], args) < 0) {
                 /* execv returns error */
                 //~ fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
@@ -239,7 +248,7 @@ int main(/*int argc, char *argv[]*/)
 
             current->status = status;
             if (res) current->completed = 1;
-            if (res && res != pid) fprintf(stderr, "ERROR: pid=%d waitpid=%d", pid, res);
+            if (res && res != pid) fprintf(stderr, "ERROR: pid=%d waitpid=%d\n", pid, res);
 
         }
     }
