@@ -47,12 +47,16 @@ void print_prompt()
     printf("$ ");
 }
 
+//TODO: Rename
 void ctrl_c_handle(){
     //TODO: fix appearance
     printf("\n");
     print_prompt();
+    fflush(stdin);
+    fflush(stdout);
 }
 
+//IDEA: change handler to int and handle with real functions like ctrl_c_handle()
 void mass_signal_set(sig_t handler)
 {
     /* sets all interactive and job-control signals to a specific value */
@@ -74,6 +78,7 @@ int check_background(char *s)
     } else return 0;
 }
 
+//TODO: move to builtins.c, rename and use the format used by the 'jobs' bash command to print non-completed jobs
 void list_all()
 {
     process *p;
@@ -86,23 +91,31 @@ void list_all()
     }
 }
 
-
-process *get_from_pid(pid_t given)
+process *get_from_pid(pid_t id_to_match)
 {
+	/* returns a pointer to the process tha matches the given id */
     process *p;
     for (p = head; p != NULL; p = p->next) {
-        if (p->pid == given) return p;
+        if (p->pid == id_to_match) return p;
     }
     return NULL;
 }
 
 void harvest_dead_children()
 {
+	//TODO: test function for multiple children deaths
+	//TODO: delete instead of marking as complete
+	/* This handler is called once a child process that was running in the background dies.
+	 * It will only find and mark as complete one process from the linked list */
     process *p;
-    pid_t target;
+    pid_t target_id;
     int status;
-    target = waitpid(-1, &status, WNOHANG);
-    if (target < 0) return;
+    
+    //TODO: check if it is a race 
+    target_id = waitpid(-1, &status, WNOHANG);
+    /* if a foreground process dies the SIGCHLD is send but it has already been handled*/
+    //TODO: remove waitpid from the main loop and then change the above comment and stderr print when target_id < 0
+    if (target_id < 0) return;
 
     if (WIFSIGNALED(status)) {
         /* child process was terminated by a signal
@@ -110,10 +123,10 @@ void harvest_dead_children()
         psignal(WTERMSIG(status), NULL);
     }
     
-    printf("target=%d status=%d\n", target, status);
-    p = get_from_pid(target);
-    printf("child %d died ", target);
-    if (!p) printf("ERROR: terminated child not found in process linked list\n");
+    printf("target_id=%d status=%d\n", target_id, status);
+    printf("process %d died ", target_id);
+    if ((p = get_from_pid(target_id)) == NULL)
+		fprintf(stderr, "ERROR: terminated child not found in process linked list\n");    
     else {
         printf(" check: %d\n", p->pid);
         p->completed = 1;
@@ -239,6 +252,7 @@ int main(/*int argc, char *argv[]*/)
             head = current;
             list_all();
 
+			//TODO: check & change if this is a race
             res = waitpid(pid, &status, run_background ? WNOHANG : 0);
             if (WIFSIGNALED(status)) {
                 /* child process was terminated by a signal
@@ -247,7 +261,8 @@ int main(/*int argc, char *argv[]*/)
             }
 
             current->status = status;
-            if (res) current->completed = 1;
+            if (res == -1) fprintf(stderr, "WAITPID ERRROR IN MAIN\n");
+            else if (res) current->completed = 1;
             if (res && res != pid) fprintf(stderr, "ERROR: pid=%d waitpid=%d\n", pid, res);
 
         }
