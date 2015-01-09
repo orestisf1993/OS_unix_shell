@@ -33,6 +33,8 @@ typedef struct cleanup{
 
 process master;
 process *head;
+process *current;
+
 char cwd[PATH_MAX];
 
 /* define HOST_NAME_MAX if it is not already defined */

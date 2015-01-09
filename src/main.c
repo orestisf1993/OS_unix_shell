@@ -48,10 +48,9 @@ void print_prompt()
 }
 
 //TODO: Rename
-void ctrl_c_handle(){
-    //TODO: fix appearance
+void ctrl_c_handle()
+{
     printf("\n");
-    print_prompt();
     fflush(stdin);
     fflush(stdout);
 }
@@ -93,7 +92,7 @@ void list_all()
 
 process *get_from_pid(pid_t id_to_match)
 {
-	/* returns a pointer to the process tha matches the given id */
+    /* returns a pointer to the process tha matches the given id */
     process *p;
     for (p = head; p != NULL; p = p->next) {
         if (p->pid == id_to_match) return p;
@@ -103,30 +102,33 @@ process *get_from_pid(pid_t id_to_match)
 
 void harvest_dead_children()
 {
-	//TODO: test function for multiple children deaths
-	//TODO: delete instead of marking as complete
-	/* This handler is called once a child process that was running in the background dies.
-	 * It will only find and mark as complete one process from the linked list */
+    //TODO: test function for multiple children deaths
+    //TODO: delete instead of marking as complete
+    /* This handler is called once a child process that was running in the background dies.
+     * It will only find and mark as complete one process from the linked list */
     process *p;
     pid_t target_id;
     int status;
-    
-    //TODO: check if it is a race 
-    target_id = waitpid(-1, &status, WNOHANG);
+
+    printf("harvest called! \n");
+
+    //~ if ((target_id = waitpid(-1, &status, WNOHANG)) < 0) return;
+
+    //TODO: check if it is a race
+    while ((target_id = waitpid(-1, &status, WNOHANG)) < 0) {}
     /* if a foreground process dies the SIGCHLD is send but it has already been handled*/
-    //TODO: remove waitpid from the main loop and then change the above comment and stderr print when target_id < 0
-    if (target_id < 0) return;
+    //TODO: remove waitpid from the main loop and then change the above comment
 
     if (WIFSIGNALED(status)) {
         /* child process was terminated by a signal
          * print to stderr the termination signal message */
         psignal(WTERMSIG(status), NULL);
     }
-    
+
     printf("target_id=%d status=%d\n", target_id, status);
     printf("process %d died ", target_id);
     if ((p = get_from_pid(target_id)) == NULL)
-		fprintf(stderr, "ERROR: terminated child not found in process linked list\n");    
+        fprintf(stderr, "ERROR: terminated child not found in process linked list\n");
     else {
         printf(" check: %d\n", p->pid);
         p->completed = 1;
@@ -137,7 +139,6 @@ void harvest_dead_children()
 
 int main(/*int argc, char *argv[]*/)
 {
-    process *current;
     char line[MAX_LENGTH];
     int n = 0;
     /* args is an array of strings where args from strtok are passed */
@@ -152,6 +153,21 @@ int main(/*int argc, char *argv[]*/)
     char **paths = NULL;
     int path_count = 0;
     char *path_variable;
+
+    sigset_t mask;
+
+    /* initialize the new signal mask */
+    sigemptyset(&mask);
+    sigdelset(&mask, SIGCHLD);
+
+
+    //~ sigemptyset (&mask);
+    //~ sigaddset (&mask, SIGCHLD);
+    //~ if (sigprocmask(SIG_UNBLOCK, &mask, &orig_mask) < 0) {
+    //~ perror ("sigprocmask");
+    //~ return 1;
+    //~ }
+
     /* welcoming message (?)*/
     //TODO: print welcoming message
 
@@ -175,16 +191,6 @@ int main(/*int argc, char *argv[]*/)
     master.next = NULL;
     current = &master;
     head = current;
-
-    //~ for(i = 0; i < 5; ++i) {
-    //~ current = malloc(sizeof(process));
-    //~ current->pid = i + 5;
-    //~ current->completed = 1;
-    //~ current->status = (i + 20) * 5;
-    //~ current->next  = head;
-    //~ head = current;
-    //~ }
-    //~ list_all();
 
     /* handle child death */
     signal(SIGCHLD, harvest_dead_children);
@@ -211,10 +217,9 @@ int main(/*int argc, char *argv[]*/)
             args[n++] = r;
         }
 
-
-        //TODO: check if command is a builtin
         /* check if command is a builtin
          * args[0] currently holds the 'main' command */
+        //TODO: handle builtin commands
         if (check_builtins(args[0]) >= 0) {
             printf("built in!\n");
             continue;
@@ -226,7 +231,14 @@ int main(/*int argc, char *argv[]*/)
         }
         args[n] = NULL;
 
-        pid = fork();
+        current = malloc(sizeof(process));
+        current->completed = 0;
+        current->next = head;
+        head = current;
+
+        //TODO: fix memleak
+
+        pid = current->pid = fork();
         if (pid == -1) {
             perror("fork");
             exit(1);
@@ -245,25 +257,30 @@ int main(/*int argc, char *argv[]*/)
             int status;
             int res;
 
-            current = malloc(sizeof(process));
-            current->pid = pid;
-            current->completed = 0;
-            current->next  = head;
-            head = current;
+            //~ sleep(1);
+
             list_all();
 
-			//TODO: check & change if this is a race
-            res = waitpid(pid, &status, run_background ? WNOHANG : 0);
-            if (WIFSIGNALED(status)) {
-                /* child process was terminated by a signal
-                 * print to stderr the termination signal message */
-                psignal(WTERMSIG(status), args[0]);
-            }
+            //TODO: fix this, race condition
+            //~ res = waitpid(pid, &status, run_background ? WNOHANG : 0);
+            if (!run_background) {
+                //~ while(!(current->completed)) {res = sigwaitinfo(&mask, NULL); harvest_dead_children();}
+                res = 0; /*sigsupsend always returns -1 */
+                while(!(current->completed)) {
+                    sigsuspend(&mask);
+                }
+            } else res = 0;
 
-            current->status = status;
-            if (res == -1) fprintf(stderr, "WAITPID ERRROR IN MAIN\n");
-            else if (res) current->completed = 1;
-            if (res && res != pid) fprintf(stderr, "ERROR: pid=%d waitpid=%d\n", pid, res);
+            //~ if (WIFSIGNALED(status)) {
+                //~ /* child process was terminated by a signal
+                 //~ * print to stderr the termination signal message */
+                //~ psignal(WTERMSIG(status), args[0]);
+            //~ }
+
+            //~ current->status = status;
+            //~ if (res == -1) fprintf(stderr, "WAITPID ERRROR IN MAIN\n");
+            //~ else if (res) current->completed = 1;
+            //~ if (res && res != pid) fprintf(stderr, "ERROR: pid=%d waitpid=%d\n", pid, res);
 
         }
     }
