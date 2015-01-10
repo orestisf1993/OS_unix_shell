@@ -10,8 +10,8 @@
 #include "utils.h"
 
 //TODO: remove all '//' comments
-//~ #include <readline/readline.h>
-//~ #include <readline/history.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 //~ #include <sys/time.h>
 
 
@@ -103,7 +103,6 @@ process *get_from_pid(pid_t id_to_match)
 
 void harvest_dead_children()
 {
-    //TODO: test function for multiple children deaths
     //TODO: delete instead of marking as complete
     /* This handler is called once a child process that was running in the background dies.
      * It will only find and mark as complete one process from the linked list */
@@ -122,12 +121,10 @@ void harvest_dead_children()
         psignal(WTERMSIG(status), msg);
     }
 
-    printf("target_id=%d status=%d\n", target_id, status);
-    printf("process %d died ", target_id);
+    printf("[%d] exited with status %d\n", target_id, status);
     if ((p = get_from_pid(target_id)) == NULL)
         fprintf(stderr, "ERROR: terminated child not found in process linked list\n");
     else {
-        printf(" check: %d\n", p->pid);
         p->completed = 1;
         p->status = status;
     }
@@ -159,7 +156,8 @@ void parse_path()
 int main(/*int argc, char *argv[]*/)
 {
     process *current;
-    char line[MAX_LENGTH];
+    //~ char line[MAX_LENGTH];
+    char *line;
     int n = 0;
     /* args is an array of strings where args from strtok are passed */
     char *args[MAX_ARGS + 1];
@@ -193,9 +191,12 @@ int main(/*int argc, char *argv[]*/)
         mass_signal_set(SIG_IGN);
         print_prompt();
 
-        //TODO: use gnu readline
-        //TODO: handle empty line
-        if (!fgets(line, MAX_LENGTH, stdin)) break;
+        //TODO: history, history_write(), history_read() + msg
+        //TODO: prompt
+        line = readline("");
+        //TODO: EXITCODES
+        if (line==NULL) exit(1);
+        else if (strcmp(line, "") == 0) continue;
 
         n = 0;
         /* WARNING! strtok modifies the initial string */
@@ -211,6 +212,8 @@ int main(/*int argc, char *argv[]*/)
         //TODO: handle builtin commands
         if (check_builtins(args[0]) >= 0) {
             printf("built in!\n");
+            //TODO: del
+            free(line);
             continue;
         } else {}
 
@@ -226,7 +229,7 @@ int main(/*int argc, char *argv[]*/)
         current->next = head;
         head = current;
 
-        //TODO: fix memleak of args
+        //TODO: fix memleak of args and line
 
         pid = current->pid = fork();
         if (pid == -1) {
@@ -243,7 +246,7 @@ int main(/*int argc, char *argv[]*/)
         } else {
             /* parent */
             if (!run_background) {
-                /*sigsupsend always returns -1 */
+                /* foreground process */
                 /* This is NOT a race condition:
                  * if the child process dies before this point of the code is reached,
                  * current->complete is already TRUE because harvest_dead_children()
@@ -251,6 +254,7 @@ int main(/*int argc, char *argv[]*/)
                 while(!(current->completed)) {
                     /* suspend until SIGCHLD signal is received
                      * but does not block the signal, so the handler is executed normally */
+                    /*sigsupsend always returns -1 */
                     sigsuspend(&mask);
                 }
             }
@@ -258,6 +262,7 @@ int main(/*int argc, char *argv[]*/)
             //TODO: del this
             list_all();
         }
+        free(line);
     }
     //TODO: free some memory ;)
     return 0;

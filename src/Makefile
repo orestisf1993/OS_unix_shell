@@ -1,2 +1,2 @@
 all:
-	gcc -g -Wall -Wextra -pedantic -o shell builtins.c main.c
+	gcc -Wall -Wextra -pedantic -o shell builtins.c main.c -lreadline
