@@ -31,9 +31,7 @@ typedef struct cleanup{
     char *r;
 } cleanup;
 
-process master;
 process *head;
-process *current;
 
 char cwd[PATH_MAX];
 

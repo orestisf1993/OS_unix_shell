@@ -162,6 +162,7 @@ void parse_path()
 
 int main(/*int argc, char *argv[]*/)
 {
+    process *current;
     char line[MAX_LENGTH];
     int n = 0;
     /* args is an array of strings where args from strtok are passed */
@@ -183,9 +184,10 @@ int main(/*int argc, char *argv[]*/)
 
     r = malloc(MAX_LENGTH * sizeof(char));
 
-    master.pid = 0;
-    master.next = NULL;
-    current = &master;
+    /* master process entry */
+    current = malloc(sizeof(process));
+    current->pid = 0;
+    current->next = NULL;
     head = current;
 
     /* handle child death */
