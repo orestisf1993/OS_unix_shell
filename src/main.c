@@ -219,9 +219,10 @@ int main(/*int argc, char *argv[]*/)
         } else {}
 
         if ((run_background = check_background(args[n - 1]))) {
-            /* if args[n-1] was only an '&', we dont' need the string */
+            /* if args[n-1] was only an '&', we don't need the string */
             if (args[n - 1][0] == 0) n--;
         }
+        /* argv[argc] must always be NULL */
         args[n] = NULL;
 
         current = malloc(sizeof(process));
@@ -229,7 +230,7 @@ int main(/*int argc, char *argv[]*/)
         current->next = head;
         head = current;
 
-        //TODO: fix memleak of current & args
+        //TODO: fix memleak of args
 
         pid = current->pid = fork();
         if (pid == -1) {
