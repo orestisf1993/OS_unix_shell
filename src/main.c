@@ -146,10 +146,7 @@ int main(/*int argc, char *argv[]*/)
     char *args[MAX_ARGS + 1];
     char *r;
     pid_t pid;
-    //TODO: delete lengths + total_len because they are pretty much useless
-    int lengths[MAX_ARGS];
     int i;
-    int total_len;
     int run_background;
     char **paths = NULL;
     int path_count = 0;
@@ -196,15 +193,11 @@ int main(/*int argc, char *argv[]*/)
 
         n = 0;
         for (i = 0; i < MAX_ARGS; ++i) lengths[i] = 0;
-        total_len = 0;
         /* WARNING! strtok modifies the initial string */
         r = strtok(line, " \n");
         args[n++] = r;
 
         while ((r = strtok(NULL, " \n")) && n < MAX_ARGS) {
-            lengths[n] += strlen(r);
-            total_len += lengths[n];
-
             args[n++] = r;
         }
 
@@ -227,7 +220,7 @@ int main(/*int argc, char *argv[]*/)
         current->next = head;
         head = current;
 
-        //TODO: fix memleak
+        //TODO: fix memleak of current & args
 
         pid = current->pid = fork();
         if (pid == -1) {
@@ -245,8 +238,6 @@ int main(/*int argc, char *argv[]*/)
         } else {
             /* parent */
             if (!run_background) {
-                //~ while(!(current->completed)) {res = sigwaitinfo(&mask, NULL); harvest_dead_children();}
-                
                 /*sigsupsend always returns -1 */
                 /* This is NOT a race condition:
                  * if the child process dies before this point of the code is reached,
