@@ -113,17 +113,13 @@ void harvest_dead_children()
 
     printf("harvest called! \n");
 
-    //~ if ((target_id = waitpid(-1, &status, WNOHANG)) < 0) return;
-
-    //TODO: check if it is a race
     while ((target_id = waitpid(-1, &status, WNOHANG)) < 0) {}
-    /* if a foreground process dies the SIGCHLD is send but it has already been handled*/
-    //TODO: remove waitpid from the main loop and then change the above comment
-
     if (WIFSIGNALED(status)) {
         /* child process was terminated by a signal
          * print to stderr the termination signal message */
-        psignal(WTERMSIG(status), NULL);
+        char msg[SIGNAL_MSG_LENGTH];
+        sprintf(msg, "[%d]", target_id);
+        psignal(WTERMSIG(status), msg);
     }
 
     printf("target_id=%d status=%d\n", target_id, status);

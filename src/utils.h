@@ -18,6 +18,7 @@ int check_builtins(char *cmd);
 
 #define MAX_LENGTH 1024
 #define MAX_ARGS 5
+#define SIGNAL_MSG_LENGTH 100
 
 /* a single process. */
 typedef struct process {
