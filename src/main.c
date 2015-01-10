@@ -48,11 +48,12 @@ void print_prompt()
 }
 
 //TODO: Rename
+//TODO: fix it again ;(
 void ctrl_c_handle()
 {
-    printf("\n");
     fflush(stdin);
     fflush(stdout);
+    printf("\n");
 }
 
 //IDEA: change handler to int and handle with real functions like ctrl_c_handle()
@@ -160,14 +161,6 @@ int main(/*int argc, char *argv[]*/)
     sigemptyset(&mask);
     sigdelset(&mask, SIGCHLD);
 
-
-    //~ sigemptyset (&mask);
-    //~ sigaddset (&mask, SIGCHLD);
-    //~ if (sigprocmask(SIG_UNBLOCK, &mask, &orig_mask) < 0) {
-    //~ perror ("sigprocmask");
-    //~ return 1;
-    //~ }
-
     /* welcoming message (?)*/
     //TODO: print welcoming message
 
@@ -181,8 +174,6 @@ int main(/*int argc, char *argv[]*/)
         paths = (char **)realloc(paths, (path_count + 1) * sizeof(char *));
         paths[path_count++] = r;
     }
-
-    //~ for (i = 0; i < path_count; ++i) printf("path %d: %s\n", i, paths[i]);
 
     free(path_variable);
     r = realloc(r, MAX_LENGTH * sizeof(char));
@@ -253,35 +244,23 @@ int main(/*int argc, char *argv[]*/)
             }
         } else {
             /* parent */
-            //TODO: point current to a tmp process and update it without malloc for a more generic code
-            int status;
-            int res;
-
-            //~ sleep(1);
-
-            list_all();
-
-            //TODO: fix this, race condition
-            //~ res = waitpid(pid, &status, run_background ? WNOHANG : 0);
             if (!run_background) {
                 //~ while(!(current->completed)) {res = sigwaitinfo(&mask, NULL); harvest_dead_children();}
-                res = 0; /*sigsupsend always returns -1 */
+                
+                /*sigsupsend always returns -1 */
+                /* This is NOT a race condition:
+                 * if the child process dies before this point of the code is reached,
+                 * current->complete is already TRUE because harvest_dead_children()
+                 * has already been called and the while loop is never executed */
                 while(!(current->completed)) {
+                    /* suspend until SIGCHLD signal is received
+                     * but does not block the signal, so the handler is executed normally */
                     sigsuspend(&mask);
                 }
-            } else res = 0;
+            }
 
-            //~ if (WIFSIGNALED(status)) {
-                //~ /* child process was terminated by a signal
-                 //~ * print to stderr the termination signal message */
-                //~ psignal(WTERMSIG(status), args[0]);
-            //~ }
-
-            //~ current->status = status;
-            //~ if (res == -1) fprintf(stderr, "WAITPID ERRROR IN MAIN\n");
-            //~ else if (res) current->completed = 1;
-            //~ if (res && res != pid) fprintf(stderr, "ERROR: pid=%d waitpid=%d\n", pid, res);
-
+            //TODO: del this
+            list_all();
         }
     }
     //TODO: free some memory ;)
