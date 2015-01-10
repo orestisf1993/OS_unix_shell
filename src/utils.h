@@ -12,7 +12,7 @@
 #endif
 #endif
 
-void init();
+void init_builtins();
 int check_builtins(char *cmd);
 
 

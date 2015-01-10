@@ -42,7 +42,7 @@ void jobs()
 {
 }
 
-void init()
+void init_builtins()
 {
     /* initialize builtins array */
 

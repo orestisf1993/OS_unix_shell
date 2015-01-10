@@ -155,8 +155,7 @@ void parse_path()
     }
 
     /* do stuff with path or return it */
-
-    while (path_count--) free(paths[path_count]);    
+    while (path_count--) free(paths[path_count]);
     free(r);
     free(path_variable);
 }
@@ -170,17 +169,17 @@ int main(/*int argc, char *argv[]*/)
     char *r;
     pid_t pid;
     int run_background;
-    
+
     sigset_t mask;
 
-    /* initialize the new signal mask */
+    /* init_builtinsialize the new signal mask */
     sigemptyset(&mask);
     sigdelset(&mask, SIGCHLD);
 
     /* welcoming message (?)*/
     //TODO: print welcoming message
 
-    init();
+    init_builtins();
 
     r = malloc(MAX_LENGTH * sizeof(char));
 
@@ -201,7 +200,7 @@ int main(/*int argc, char *argv[]*/)
         if (!fgets(line, MAX_LENGTH, stdin)) break;
 
         n = 0;
-        /* WARNING! strtok modifies the initial string */
+        /* WARNING! strtok modifies the init_builtinsial string */
         r = strtok(line, " \n");
         args[n++] = r;
 
@@ -239,7 +238,6 @@ int main(/*int argc, char *argv[]*/)
             mass_signal_set(SIG_DFL);
             if (execvp(args[0], args) < 0) {
                 /* execv returns error */
-                //~ fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
                 perror(args[0]);
                 _exit(EXIT_FAILURE);   /* exec never returns */
             }
