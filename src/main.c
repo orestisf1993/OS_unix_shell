@@ -14,6 +14,7 @@
 #include <readline/history.h>
 //~ #include <sys/time.h>
 
+int interrupt_called = 0;
 
 void print_cwd()
 {
@@ -48,12 +49,12 @@ void print_prompt()
 }
 
 //TODO: Rename
-//TODO: fix it again ;(
 void ctrl_c_handle()
 {
+    printf("\n");
     fflush(stdin);
     fflush(stdout);
-    printf("\n");
+    interrupt_called = 1;
 }
 
 //IDEA: change handler to int and handle with real functions like ctrl_c_handle()
@@ -160,11 +161,10 @@ int main(/*int argc, char *argv[]*/)
     char *line;
     int n = 0;
     /* args is an array of strings where args from strtok are passed */
-    char *args[MAX_ARGS + 1];
+    char *args[MAX_ARGS + 2];
     char *r;
     pid_t pid;
     int run_background;
-
     sigset_t mask;
 
     /* initialize the new signal mask */
@@ -186,17 +186,30 @@ int main(/*int argc, char *argv[]*/)
 
     /* handle child death */
     signal(SIGCHLD, harvest_dead_children);
+    rl_getc_function = getc;
+    rl_clear_signals();
 
     while (1) {
         mass_signal_set(SIG_IGN);
-        print_prompt();
+        interrupt_called = 0; //TODO: move in continue_()
+        //~ print_prompt();
 
         //TODO: history, history_write(), history_read() + msg
         //TODO: prompt
-        line = readline("");
+        //TODO: all continue calls call a function to clear memory
+        line = readline("shell: ");
         //TODO: EXITCODES
-        if (line==NULL) exit(1);
-        else if (strcmp(line, "") == 0) continue;
+        if (line == NULL) {
+            if (!interrupt_called) exit(1);
+        } else if (strcmp(line, "") == 0) {
+            free(line);
+            continue;
+        }
+
+        if (interrupt_called) {
+            free(line);
+            continue;
+        } else add_history(line);
 
         n = 0;
         /* WARNING! strtok modifies the initial string */
