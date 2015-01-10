@@ -154,6 +154,10 @@ void parse_path()
         paths[path_count++] = r;
     }
 
+    /* do stuff with path or return it */
+
+    while (path_count--) free(paths[path_count]);    
+    free(r);
     free(path_variable);
 }
 
