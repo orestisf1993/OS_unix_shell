@@ -202,7 +202,7 @@ int main(/*int argc, char *argv[]*/)
         if (!fgets(line, MAX_LENGTH, stdin)) break;
 
         n = 0;
-        /* WARNING! strtok modifies the init_builtinsial string */
+        /* WARNING! strtok modifies the initial string */
         r = strtok(line, " \n");
         args[n++] = r;
 
