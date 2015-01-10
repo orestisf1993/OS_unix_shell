@@ -173,7 +173,7 @@ int main(/*int argc, char *argv[]*/)
 
     sigset_t mask;
 
-    /* init_builtinsialize the new signal mask */
+    /* initialize the new signal mask */
     sigemptyset(&mask);
     sigdelset(&mask, SIGCHLD);
 
