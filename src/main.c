@@ -154,6 +154,11 @@ void parse_path()
     free(path_variable);
 }
 
+void continue_clear(char *line){
+    interrupt_called = 0;
+    free(line);
+}
+
 int main(/*int argc, char *argv[]*/)
 {
     process *current;
@@ -187,27 +192,26 @@ int main(/*int argc, char *argv[]*/)
     /* handle child death */
     signal(SIGCHLD, harvest_dead_children);
     rl_getc_function = getc;
-    rl_clear_signals();
+    //~ rl_clear_signals();
 
     while (1) {
         mass_signal_set(SIG_IGN);
-        interrupt_called = 0; //TODO: move in continue_()
+        
         //~ print_prompt();
 
         //TODO: history, history_write(), history_read() + msg
         //TODO: prompt
-        //TODO: all continue calls call a function to clear memory
         line = readline("shell: ");
         //TODO: EXITCODES
         if (line == NULL) {
             if (!interrupt_called) exit(1);
         } else if (strcmp(line, "") == 0) {
-            free(line);
+            continue_clear(line);
             continue;
         }
 
         if (interrupt_called) {
-            free(line);
+            continue_clear(line);
             continue;
         } else add_history(line);
 
@@ -226,7 +230,7 @@ int main(/*int argc, char *argv[]*/)
         if (check_builtins(args[0]) >= 0) {
             printf("built in!\n");
             //TODO: del
-            free(line);
+            continue_clear(line);
             continue;
         } else {}
 
@@ -275,7 +279,7 @@ int main(/*int argc, char *argv[]*/)
             //TODO: del this
             list_all();
         }
-        free(line);
+        continue_clear(line);
     }
     //TODO: free some memory ;)
     return 0;
