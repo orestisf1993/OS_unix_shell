@@ -138,31 +138,13 @@ void harvest_dead_children()
 
 }
 
-int main(/*int argc, char *argv[]*/)
+void parse_path()
 {
-    char line[MAX_LENGTH];
-    int n = 0;
-    /* args is an array of strings where args from strtok are passed */
-    char *args[MAX_ARGS + 1];
+    char *path_variable;
     char *r;
-    pid_t pid;
-    int i;
-    int run_background;
     char **paths = NULL;
     int path_count = 0;
-    char *path_variable;
 
-    sigset_t mask;
-
-    /* initialize the new signal mask */
-    sigemptyset(&mask);
-    sigdelset(&mask, SIGCHLD);
-
-    /* welcoming message (?)*/
-    //TODO: print welcoming message
-
-    init();
-    //TODO: delete path analyzing or find a use for it
     r = malloc(PATH_MAX * sizeof(char));
     path_variable = malloc(PATH_MAX * sizeof(char));
 
@@ -173,7 +155,30 @@ int main(/*int argc, char *argv[]*/)
     }
 
     free(path_variable);
-    r = realloc(r, MAX_LENGTH * sizeof(char));
+}
+
+int main(/*int argc, char *argv[]*/)
+{
+    char line[MAX_LENGTH];
+    int n = 0;
+    /* args is an array of strings where args from strtok are passed */
+    char *args[MAX_ARGS + 1];
+    char *r;
+    pid_t pid;
+    int run_background;
+    
+    sigset_t mask;
+
+    /* initialize the new signal mask */
+    sigemptyset(&mask);
+    sigdelset(&mask, SIGCHLD);
+
+    /* welcoming message (?)*/
+    //TODO: print welcoming message
+
+    init();
+
+    r = malloc(MAX_LENGTH * sizeof(char));
 
     master.pid = 0;
     master.next = NULL;
@@ -192,7 +197,6 @@ int main(/*int argc, char *argv[]*/)
         if (!fgets(line, MAX_LENGTH, stdin)) break;
 
         n = 0;
-        for (i = 0; i < MAX_ARGS; ++i) lengths[i] = 0;
         /* WARNING! strtok modifies the initial string */
         r = strtok(line, " \n");
         args[n++] = r;
