@@ -20,6 +20,11 @@ int check_builtins(char *cmd);
 #define MAX_ARGS 5
 #define SIGNAL_MSG_LENGTH 100
 
+
+enum {SET_DFL = 0,
+      SET_IGN
+     } signal_set;
+
 void shell_exit();
 
 /* a single process. */
@@ -30,7 +35,7 @@ typedef struct process {
     int status;               /* reported status value */
 } process;
 
-typedef struct cleanup{
+typedef struct cleanup {
     char *r;
 } cleanup;
 

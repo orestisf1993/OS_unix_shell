@@ -56,25 +56,31 @@ void interrupt_handle()
     interrupt_called = 1;
 }
 
-//IDEA: change handler to int and handle with real functions like interrupt_handle()
-void mass_signal_set(sig_t handler)
+void mass_signal_set(int handler_code)
 {
-    /* sets all interactive and job-control signals to a specific value */
-    if (handler == SIG_DFL) signal (SIGINT,  handler);
-    else signal(SIGINT, interrupt_handle);
-    signal (SIGQUIT, handler);
-    signal (SIGTSTP, handler);
-    signal (SIGTTIN, handler);
-    signal (SIGTTOU, handler);
+    switch(handler_code) {
+        case SET_DFL:
+            signal (SIGINT,  SIG_DFL);
+            signal (SIGQUIT, SIG_DFL);
+            signal (SIGTSTP, SIG_DFL);
+            signal (SIGTTIN, SIG_DFL);
+            signal (SIGTTOU, SIG_DFL);
+        case SET_IGN:
+            signal (SIGINT,  interrupt_handle);
+            signal (SIGQUIT, SIG_IGN);
+            signal (SIGTSTP, SIG_IGN);
+            signal (SIGTTIN, SIG_IGN);
+            signal (SIGTTOU, SIG_IGN);
+    }
 }
 
 int check_background(char *s)
 {
     /* if the last char is an ampersand replace it with '\0' */
-    int i=0;
-    while(1){
+    int i = 0;
+    while(1) {
         if (s[i] == '\0') return 0;
-        else if (s[i] == '&'){
+        else if (s[i] == '&') {
             s[i] = 0;
             return 1;
         }
@@ -121,11 +127,10 @@ void harvest_dead_children()
         /* child process was terminated by a signal
          * print to stderr the termination signal message */
         char msg[SIGNAL_MSG_LENGTH];
-        sprintf(msg, "[%d]", target_id);
+        sprintf(msg, "[%d] exited with status %d", target_id, status);
         psignal(WTERMSIG(status), msg);
-    }
+    } else printf("[%d] exited with status %d\n", target_id, status);
 
-    printf("[%d] exited with status %d\n", target_id, status);
     if ((p = get_from_pid(target_id)) == NULL)
         fprintf(stderr, "ERROR: terminated child not found in process linked list\n");
     else {
@@ -198,7 +203,7 @@ int main(/*int argc, char *argv[]*/)
     read_history(NULL);
 
     while (1) {
-        mass_signal_set(SIG_IGN);
+        mass_signal_set(SET_IGN);
 
         //~ print_prompt();
 
@@ -219,7 +224,7 @@ int main(/*int argc, char *argv[]*/)
         } else add_history(line);
 
         if ((run_background = check_background(line))) {
-            
+
         }
 
         n = 0;
@@ -232,14 +237,9 @@ int main(/*int argc, char *argv[]*/)
          * args[0] currently holds the 'main' command */
         //TODO: handle builtin commands
         if (check_builtins(args[0]) >= 0) {
-            printf("built in!\n");
-            //TODO: del
             continue_clear(line);
             continue;
         } else {}
-
-
-
 
         current = malloc(sizeof(process));
         current->completed = 0;
@@ -254,7 +254,7 @@ int main(/*int argc, char *argv[]*/)
             exit(1);
         } else if (pid == 0) {
             /* child */
-            mass_signal_set(SIG_DFL);
+            mass_signal_set(SET_DFL);
             if (execvp(args[0], args) < 0) {
                 /* execv returns error */
                 perror(args[0]);
@@ -262,6 +262,7 @@ int main(/*int argc, char *argv[]*/)
             }
         } else {
             /* parent */
+
             if (!run_background) {
                 /* foreground process */
                 /* This is NOT a race condition:
@@ -274,7 +275,7 @@ int main(/*int argc, char *argv[]*/)
                     /*sigsupsend always returns -1 */
                     sigsuspend(&mask);
                 }
-            }
+            } else setpgid(pid, pid);
 
             //TODO: del this
             list_all();
