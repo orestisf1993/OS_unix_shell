@@ -88,12 +88,26 @@ int check_background(char *s)
     }
 }
 
-process *get_from_pid(pid_t id_to_match)
+process *pop_from_pid(pid_t id_to_match)
 {
     /* returns a pointer to the process tha matches the given id */
     process *p;
-    for (p = head; p != NULL; p = p->next) {
-        if (p->pid == id_to_match) return p;
+    process *previous;
+
+
+    previous = head;
+    if (previous->pid == id_to_match) {
+        head = previous->next;
+        return previous;
+    }
+
+    for (p = head->next; p != NULL; previous = p, p = p->next) {
+        if (p->pid == id_to_match) {
+            printf("PR_NEXT: %d P_NEXT: %d\n", previous->next->pid, p->next->pid);
+            previous->next = p->next;
+            printf("AFTER: %d\n", previous->next->pid);
+            return p;
+        }
     }
     return NULL;
 }
@@ -118,7 +132,7 @@ void harvest_dead_children()
         psignal(WTERMSIG(status), msg);
     } else printf("[%d] exited with status %d\n", target_id, status);
 
-    if ((p = get_from_pid(target_id)) == NULL)
+    if ((p = pop_from_pid(target_id)) == NULL)
         fprintf(stderr, "ERROR: terminated child not found in process linked list\n");
     else {
         p->completed = 1;
@@ -234,13 +248,15 @@ int main(/*int argc, char *argv[]*/)
             continue;
         } else {}
 
+
+
+
         current = malloc(sizeof(process));
         current->completed = 0;
         current->next = head;
         head = current;
 
         //TODO: fix memleak of args and line
-
         pid = current->pid = fork();
         if (pid == -1) {
             perror("fork");
@@ -267,7 +283,8 @@ int main(/*int argc, char *argv[]*/)
                     /*sigsupsend always returns -1 */
                     sigsuspend(&mask);
                 }
-            } else setpgid(pid, pid);
+                free(current);
+            } else setpgid(pid, pid); /* theoretically a race condition. but it doesn't affect us that much. */
 
             //TODO: del this
             list_all();
