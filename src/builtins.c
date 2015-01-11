@@ -33,7 +33,7 @@ void shell_exit()
     int hist_res;
     /* kill all background processes first and then exit shell */
     free_all();
-    hist_res = append_history(history_length, NULL);
+    hist_res = write_history(NULL);
     if (hist_res == ENOENT) write_history(NULL);
     exit(0);
 }
