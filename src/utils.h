@@ -26,6 +26,7 @@ enum {SET_DFL = 0,
      } signal_set;
 
 void shell_exit();
+void list_all();
 
 /* a single process. */
 typedef struct process {

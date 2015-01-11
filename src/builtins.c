@@ -43,8 +43,17 @@ void change_directory(char *dir)
     UNUSED(dir);
 }
 
-void jobs()
+void list_all()
 {
+    process *p;
+    printf("pid completed status\n");
+    for (p = head; p != NULL; p = p->next) {
+        if (p->pid)
+            printf("[%d] %s status: %d\n",
+                   p->pid,
+                   (p->completed) ? "COMPLETED" : "RUNNING",
+                   p->status);
+    }
 }
 
 void init_builtins()

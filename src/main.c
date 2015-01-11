@@ -88,19 +88,6 @@ int check_background(char *s)
     }
 }
 
-//TODO: move to builtins.c, rename and use the format used by the 'jobs' bash command to print non-completed jobs
-void list_all()
-{
-    process *p;
-    printf("pid completed status\n");
-    for (p = head; p != NULL; p = p->next) {
-        printf("%d", p->pid);
-        if (p->pid) printf(" %d %d", p->completed, p->status);
-        else printf(" MASTER MASTER");
-        printf("\n");
-    }
-}
-
 process *get_from_pid(pid_t id_to_match)
 {
     /* returns a pointer to the process tha matches the given id */
@@ -268,7 +255,6 @@ int main(/*int argc, char *argv[]*/)
             }
         } else {
             /* parent */
-
             if (!run_background) {
                 /* foreground process */
                 /* This is NOT a race condition:
