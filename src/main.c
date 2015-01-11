@@ -194,6 +194,8 @@ int main(/*int argc, char *argv[]*/)
     rl_getc_function = getc;
     //~ rl_clear_signals();
 
+    read_history(NULL);
+
     while (1) {
         mass_signal_set(SIG_IGN);
         
@@ -204,7 +206,7 @@ int main(/*int argc, char *argv[]*/)
         line = readline("shell: ");
         //TODO: EXITCODES
         if (line == NULL) {
-            if (!interrupt_called) exit(1);
+            if (!interrupt_called) shell_exit();
         } else if (strcmp(line, "") == 0) {
             continue_clear(line);
             continue;

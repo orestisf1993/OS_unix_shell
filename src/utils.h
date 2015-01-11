@@ -20,6 +20,8 @@ int check_builtins(char *cmd);
 #define MAX_ARGS 5
 #define SIGNAL_MSG_LENGTH 100
 
+void shell_exit();
+
 /* a single process. */
 typedef struct process {
     struct process *next;     /* next process */

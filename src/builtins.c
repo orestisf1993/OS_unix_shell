@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <readline/history.h>
+#include <errno.h>
 
 #include "utils.h"
 
@@ -28,8 +30,11 @@ void free_all()
 
 void shell_exit()
 {
+    int hist_res;
     /* kill all background processes first and then exit shell */
     free_all();
+    hist_res = append_history(history_length, NULL);
+    if (hist_res == ENOENT) write_history(NULL);
     exit(0);
 }
 
