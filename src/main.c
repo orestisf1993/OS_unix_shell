@@ -48,8 +48,7 @@ void print_prompt()
     printf("$ ");
 }
 
-//TODO: Rename
-void ctrl_c_handle()
+void interrupt_handle()
 {
     printf("\n");
     fflush(stdin);
@@ -57,12 +56,12 @@ void ctrl_c_handle()
     interrupt_called = 1;
 }
 
-//IDEA: change handler to int and handle with real functions like ctrl_c_handle()
+//IDEA: change handler to int and handle with real functions like interrupt_handle()
 void mass_signal_set(sig_t handler)
 {
     /* sets all interactive and job-control signals to a specific value */
     if (handler == SIG_DFL) signal (SIGINT,  handler);
-    else signal(SIGINT, ctrl_c_handle);
+    else signal(SIGINT, interrupt_handle);
     signal (SIGQUIT, handler);
     signal (SIGTSTP, handler);
     signal (SIGTTIN, handler);
