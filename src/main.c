@@ -72,11 +72,15 @@ void mass_signal_set(sig_t handler)
 int check_background(char *s)
 {
     /* if the last char is an ampersand replace it with '\0' */
-    int last = strlen(s) - 1;
-    if (s[last] == '&') {
-        s[last] = 0;
-        return 1;
-    } else return 0;
+    int i=0;
+    while(1){
+        if (s[i] == '\0') return 0;
+        else if (s[i] == '&'){
+            s[i] = 0;
+            return 1;
+        }
+        i++;
+    }
 }
 
 //TODO: move to builtins.c, rename and use the format used by the 'jobs' bash command to print non-completed jobs
@@ -154,7 +158,8 @@ void parse_path()
     free(path_variable);
 }
 
-void continue_clear(char *line){
+void continue_clear(char *line)
+{
     interrupt_called = 0;
     free(line);
 }
@@ -167,7 +172,6 @@ int main(/*int argc, char *argv[]*/)
     int n = 0;
     /* args is an array of strings where args from strtok are passed */
     char *args[MAX_ARGS + 2];
-    char *r;
     pid_t pid;
     int run_background;
     sigset_t mask;
@@ -180,8 +184,6 @@ int main(/*int argc, char *argv[]*/)
     //TODO: print welcoming message
 
     init_builtins();
-
-    r = malloc(MAX_LENGTH * sizeof(char));
 
     /* master process entry */
     current = malloc(sizeof(process));
@@ -198,7 +200,7 @@ int main(/*int argc, char *argv[]*/)
 
     while (1) {
         mass_signal_set(SIG_IGN);
-        
+
         //~ print_prompt();
 
         //TODO: history, history_write(), history_read() + msg
@@ -217,14 +219,15 @@ int main(/*int argc, char *argv[]*/)
             continue;
         } else add_history(line);
 
+        if ((run_background = check_background(line))) {
+            
+        }
+
         n = 0;
         /* WARNING! strtok modifies the initial string */
-        r = strtok(line, " \n");
-        args[n++] = r;
+        args[n++] = strtok(line, " \n");
 
-        while ((r = strtok(NULL, " \n")) && n < MAX_ARGS) {
-            args[n++] = r;
-        }
+        while ((args[n++] = strtok(NULL, " \n")) && n < MAX_ARGS) {}
 
         /* check if command is a builtin
          * args[0] currently holds the 'main' command */
@@ -236,12 +239,8 @@ int main(/*int argc, char *argv[]*/)
             continue;
         } else {}
 
-        if ((run_background = check_background(args[n - 1]))) {
-            /* if args[n-1] was only an '&', we don't need the string */
-            if (args[n - 1][0] == 0) n--;
-        }
-        /* argv[argc] must always be NULL */
-        args[n] = NULL;
+
+
 
         current = malloc(sizeof(process));
         current->completed = 0;
