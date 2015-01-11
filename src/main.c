@@ -79,10 +79,10 @@ int check_background(char *s)
     /* if the last char is an ampersand replace it with '\0' */
     int i = 0;
     while(1) {
-        if (s[i] == '\0') return 0;
+        if (s[i] == '\0') return -1;
         else if (s[i] == '&') {
             s[i] = 0;
-            return 1;
+            return i;
         }
         i++;
     }
@@ -179,6 +179,7 @@ int main(/*int argc, char *argv[]*/)
     pid_t pid;
     int run_background;
     sigset_t mask;
+    char *line_leftover = NULL;
 
     /* initialize the new signal mask */
     sigemptyset(&mask);
@@ -209,7 +210,7 @@ int main(/*int argc, char *argv[]*/)
 
         //TODO: history, history_write(), history_read() + msg
         //TODO: prompt
-        line = readline("shell: ");
+        line = line_leftover ? line_leftover : readline("shell: ");
         //TODO: EXITCODES
         if (line == NULL) {
             if (!interrupt_called) shell_exit();
@@ -223,8 +224,13 @@ int main(/*int argc, char *argv[]*/)
             continue;
         } else add_history(line);
 
-        if ((run_background = check_background(line))) {
-
+        /* check if process should be run in the background before we edit 'line' */
+        if ((run_background = check_background(line)) == -1) {
+            run_background = 0;
+            line_leftover = NULL;
+        } else {
+            if(line[run_background + 1]) line_leftover = strdup(&line[run_background + 1]);
+            run_background = 1;
         }
 
         n = 0;
