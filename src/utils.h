@@ -34,6 +34,7 @@ typedef struct process {
     pid_t pid;                /* process ID */
     int completed;           /* true if process has completed */
     int status;               /* reported status value */
+    int bg;                 /* true if process is running on the background */
 } process;
 
 typedef struct cleanup {

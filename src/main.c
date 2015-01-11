@@ -137,8 +137,8 @@ void harvest_dead_children()
     else {
         p->completed = 1;
         p->status = status;
+        if (p->bg) free(p); /* don't free fg processes, main() does it */
     }
-
 }
 
 void parse_path()
@@ -248,11 +248,9 @@ int main(/*int argc, char *argv[]*/)
             continue;
         } else {}
 
-
-
-
         current = malloc(sizeof(process));
         current->completed = 0;
+        current->bg = run_background;
         current->next = head;
         head = current;
 
