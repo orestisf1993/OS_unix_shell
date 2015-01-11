@@ -5,5 +5,5 @@ shell
 t
 wt
 *test.c
-isl
+osl
 only_sleep.c
