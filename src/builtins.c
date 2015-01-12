@@ -8,7 +8,7 @@
 
 const builtins_struct builtins[BUILTINS_NUM] = {
     {EXIT_CMD  , "exit" , shell_exit          , "usage:\nexit [exit_code]\n\nDefault value of [exit_code] is 0\n"},
-    {CD_CMD    , "cd"   , change_directory    , "usage:\ncd [dir]\n\nChange current working directory to [dir] directory\nif [dir] is blank, change the directory to HOME environmental variable\n"},
+    {CD_CMD    , "cd"   , change_directory    , "usage:\ncd [dir]\n\nChange current working directory to [dir] directory (spaces don't need to be escaped)\nif [dir] is blank, change the directory to HOME environmental variable\n"},
     {JOBS_CMD  , "jobs" , jobs_list           , "usage:\njobs\n\nlist all active processes.\n"},
     {HELP_CMD  , "help" , print_help          , "usage:\nhelp [cmd]\n\nShow help for command [cmd].\nIf [cmd] is blank show this text.\n"},
     {HOFF_CMD  , "hoff" , history_off         , "usage:\nhoff\n\nhoff disables the history log\n"},
@@ -101,18 +101,33 @@ void jobs_list(int argc, char** argv)
     }
 }
 
-/* TODO: fix error w/ dirs w/ space */
 void change_directory(int argc, char **argv )
 {
-    if(argc > 2) {
-        PRINT_BAD_ARGS_MSG(argv[0]);
-    } else if (argc == 1) {
+    if (argc == 1) {
         /* no arguments after 'cd', change directory to HOME */
         chdir(getenv("HOME"));
-        /* change directory to argv[1] */
-    } else if( (chdir(argv[1]) ) == -1 ) {
-        /* error in chdir */
-        perror(argv[0]);
+    } else {
+        /* 0 because:
+         * strlen() + 1 gives an extra '1' for at argc-1 => +1 extra
+         * we must include the null terminator => -1 */
+        size_t total_size = 0;
+        char *full_dir;
+        int i;
+        for (i=1; i<argc; ++i) total_size += (strlen(argv[i]) + 1) * sizeof(char);
+        full_dir = malloc(total_size);
+        strcpy(full_dir, argv[1]);
+        for (i=2; i<argc; ++i)
+        {
+            strcat(full_dir, " ");
+            strcat(full_dir, argv[i]);
+        }
+
+        if ((chdir(full_dir) ) == -1)
+        {
+            /* error in chdir */
+            perror(argv[0]);
+        }
+        free(full_dir);
     }
 }
 
