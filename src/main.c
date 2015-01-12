@@ -15,36 +15,52 @@
 
 int interrupt_called = 0;
 
-void print_cwd()
+char* print_cwd()
 {
-    if (getcwd(cwd, sizeof(cwd)))
-        printf("%s", cwd);
-    else
-        printf("(cwd failed?)");
+    char *cwd = malloc(PATH_MAX);
+    if(getcwd(cwd, PATH_MAX)) return cwd;
+    else {
+        perror("cwd");
+        return NULL;
+    }
 }
 
-void print_user()
+char* print_host()
+{
+    char *hostname = malloc(HOST_NAME_MAX);
+    if(gethostname(hostname, HOST_NAME_MAX) == 0)
+        return hostname;
+    else {
+        perror("gethostname");
+        return NULL;
+    }
+}
+
+char* print_user()
 {
     struct passwd *p = getpwuid(getuid());
-    if (p) printf("%s", p->pw_name);
-    else printf("(uid failed?)");
+    if (!p) {
+        perror("getuid");
+        return NULL;
+    } else return p->pw_name;
 }
 
-void print_host()
+void print_prompt(char **buffer)
 {
-    if(gethostname(hostname, sizeof(hostname)) == 0)
-        printf("%s", hostname);
-    else printf("(hostname failed?)");
-}
+    size_t needed;
+    char *host;
+    char *user;
+    char *cwd;
 
-void print_prompt()
-{
-    print_user();
-    printf("@");
-    print_host();
-    printf(":");
-    print_cwd();
-    printf("$ ");
+    user = print_user();
+    host = print_host();
+    cwd = print_cwd();
+    needed = snprintf(NULL, 0, "%s@%s:%s$ ", user, host, cwd);
+    *buffer = realloc(*buffer, needed+1);
+    sprintf(*buffer, "%s@%s:%s$ ", user, host, cwd);
+    
+    free(host);
+    free(cwd);
 }
 
 void interrupt_handle()
@@ -181,7 +197,8 @@ int main(/*int argc, char *argv[]*/)
     int run_background;
     sigset_t mask;
     char *line_leftover = NULL;
-
+    char *prompt_buffer=NULL;
+    
     /* initialize the new signal mask */
     sigemptyset(&mask);
     sigdelset(&mask, SIGCHLD);
@@ -207,10 +224,9 @@ int main(/*int argc, char *argv[]*/)
     while (1) {
         mass_signal_set(SET_IGN);
 
-        //~ print_prompt();
+        print_prompt(&prompt_buffer);
 
-        //TODO: prompt
-        line = line_leftover ? line_leftover : readline("shell: ");
+        line = line_leftover ? line_leftover : readline(prompt_buffer);
         if (line == NULL) {
             if (!interrupt_called) shell_exit();
         } else if (strcmp(line, "") == 0) {

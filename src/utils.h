@@ -44,8 +44,6 @@ typedef struct cleanup {
 
 process *head;
 
-char cwd[PATH_MAX];
-
 /* define HOST_NAME_MAX if it is not already defined */
 #if !defined(HOST_NAME_MAX)
 #if defined(_POSIX_HOST_NAME_MAX)
@@ -65,5 +63,4 @@ char cwd[PATH_MAX];
 #define HOST_SRC "256"
 #endif
 #endif
-char hostname[HOST_NAME_MAX + 1];
 #endif
