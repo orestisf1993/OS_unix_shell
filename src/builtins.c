@@ -27,7 +27,8 @@ void print_help(int argc, char** argv)
     else {
         printf("Showing help for command: %s\n", builtins[code].cmd);
         printf("-------------------------\n");
-        printf("%s\n", builtins[code].help_text);}
+        printf("%s\n", builtins[code].help_text);
+    }
 }
 
 void free_all()
@@ -57,7 +58,6 @@ void jobs_list(int argc, char** argv)
 
     if (argc > 1) PRINT_NO_ARGS_MSG(argv[0]);
 
-    printf("pid completed status\n");
     for (p = head; p != NULL; p = p->next) {
         if (p->pid) {
             printf("[%d] %s",

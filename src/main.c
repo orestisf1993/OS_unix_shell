@@ -135,8 +135,6 @@ void harvest_dead_child()
     pid_t target_id;
     int status;
 
-    printf("harvest called! \n");
-
     while ((target_id = waitpid(-1, &status, WNOHANG)) < 0) {}
     if (WIFSIGNALED(status)) {
         /* child process was terminated by a signal
@@ -216,7 +214,6 @@ int main(/*int argc, char *argv[]*/)
     /* handle child death */
     signal(SIGCHLD, harvest_dead_child);
     rl_getc_function = getc;
-    //~ rl_clear_signals();
 
     read_history(NULL);
 
@@ -254,9 +251,7 @@ int main(/*int argc, char *argv[]*/)
 
         /* check if command is a builtin
          * args[0] currently holds the 'main' command */
-        //TODO: handle builtin commands
         if ((builtin_code = check_if_builtin(args[0])) >= 0) {
-            printf("BUILTIN: code=%d argc=%d\n", builtin_code, n - 1);
             if (run_background) fprintf(stderr, "WARNING: builtin commands cannot be run in the background\n");
             call_builtin(builtin_code, n - 1, args);
             continue_clear(&line);
