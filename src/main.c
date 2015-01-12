@@ -111,7 +111,7 @@ process *pop_from_pid(pid_t id_to_match)
     return NULL;
 }
 
-void harvest_dead_children()
+void harvest_dead_child()
 {
     /* This handler is called once a child process that was running in the background dies.
      * It will only find and mark as complete one process from the linked list */
@@ -198,7 +198,7 @@ int main(/*int argc, char *argv[]*/)
     current = head;
 
     /* handle child death */
-    signal(SIGCHLD, harvest_dead_children);
+    signal(SIGCHLD, harvest_dead_child);
     rl_getc_function = getc;
     //~ rl_clear_signals();
 
@@ -269,7 +269,7 @@ int main(/*int argc, char *argv[]*/)
                 /* foreground process */
                 /* This is NOT a race condition:
                  * if the child process dies before this point of the code is reached,
-                 * current->complete is already TRUE because harvest_dead_children()
+                 * current->complete is already TRUE because harvest_dead_child()
                  * has already been called and the while loop is never executed */
                 while(!(current->completed)) {
                     /* suspend until SIGCHLD signal is received
