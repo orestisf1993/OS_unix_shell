@@ -12,8 +12,6 @@
 #endif
 #endif
 
-#define BUILTINS_NUM 4
-
 int check_if_builtin(char *cmd);
 void call_builtin(int code, int argc, char** argv);
 
@@ -23,12 +21,17 @@ void change_directory(int argc, char** argv);
 void shell_exit(int argc, char** argv);
 void free_all();
 void print_help(int argc, char** argv);
+void history_on(int argc, char** argv);
+void history_off(int argc, char** argv);
 
 enum {
     EXIT_CMD = 0,
     CD_CMD,
     JOBS_CMD,
-    HELP_CMD
+    HELP_CMD,
+    HOFF_CMD,
+    HON_CMD,
+    BUILTINS_NUM /* length of this enumerator, must always be last */
 } builtin_codes_macro;
 
 typedef struct builtins_struct {

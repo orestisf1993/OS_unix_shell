@@ -9,7 +9,6 @@
 
 #include "utils.h"
 
-//TODO: remove all '//' comments + spell check
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -109,7 +108,6 @@ process *pop_from_pid(pid_t id_to_match)
     process *p;
     process *previous;
 
-
     previous = head;
     if (previous->pid == id_to_match) {
         head = previous->next;
@@ -127,6 +125,7 @@ process *pop_from_pid(pid_t id_to_match)
     return NULL;
 }
 
+int always_print_dead = 0;
 void harvest_dead_child()
 {
     /* This handler is called once a child process that was running in the background dies.
@@ -142,14 +141,21 @@ void harvest_dead_child()
         char msg[SIGNAL_MSG_LENGTH];
         sprintf(msg, "[%d] exited with status %d", target_id, status);
         psignal(WTERMSIG(status), msg);
-    } else printf("[%d] exited with status %d\n", target_id, status);
+    }
+    else if(always_print_dead) printf("[%d] exited with status %d\n", target_id, status);
 
     if ((p = pop_from_pid(target_id)) == NULL)
         fprintf(stderr, "ERROR: terminated child not found in process linked list\n");
     else {
         p->completed = 1;
         p->status = status;
-        if (p->bg) free(p); /* don't free fg processes, main() does it */
+        if (p->bg)
+        {
+            free(p); /* don't free fg processes, main() does it */
+            if (!always_print_dead && !WIFSIGNALED(status)){
+                printf("[%d] exited with status %d\n", target_id, status);
+            }
+        }
     }
 }
 
@@ -192,13 +198,15 @@ void welcoming_message()
     printf("Creating a Unix shell assignment for \"Operating Systems\" course (7th semester)\n");
     printf("Creator: Orestis Floros-Malivitsis\n");
     printf("----------------------------------\n");
+    printf("Ctrl-D or 'exit' to exit\n");
     printf("Type 'help [cmd]' for help on a specific command\n");
     printf("Type 'help' for a list of all available commands\n");
     printf("\n");
     printf("This shell uses by default a history log located at $HOME/.history\n");
     printf("Use the UP/DOWN arrow keys to navigate through history\n");
-    printf("Type history_off if you want to disable the history log\n");
-    printf("----------------------------------\n");
+    printf("Type hoff if you want to disable the history log file\n");
+    printf("Type hon if you want to reenable the history log file\n");
+    printf("----------------------------------------------------\n");
     printf("\n");
 }
 
