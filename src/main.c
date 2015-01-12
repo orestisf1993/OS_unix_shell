@@ -15,7 +15,7 @@
 
 int interrupt_called = 0;
 
-char* print_cwd()
+char* shell_get_cwd()
 {
     char *cwd = malloc(PATH_MAX);
     if(getcwd(cwd, PATH_MAX)) return cwd;
@@ -25,7 +25,7 @@ char* print_cwd()
     }
 }
 
-char* print_host()
+char* shell_get_host()
 {
     char *hostname = malloc(HOST_NAME_MAX);
     if(gethostname(hostname, HOST_NAME_MAX) == 0)
@@ -36,7 +36,7 @@ char* print_host()
     }
 }
 
-char* print_user()
+char* shell_get_user()
 {
     struct passwd *p = getpwuid(getuid());
     if (!p) {
@@ -45,16 +45,16 @@ char* print_user()
     } else return p->pw_name;
 }
 
-void print_prompt(char **buffer)
+void create_prompt_message(char **buffer)
 {
     size_t needed;
     char *host;
     char *user;
     char *cwd;
 
-    user = print_user();
-    host = print_host();
-    cwd = print_cwd();
+    user = shell_get_user();
+    host = shell_get_host();
+    cwd = shell_get_cwd();
     needed = snprintf(NULL, 0, "%s@%s:%s$ ", user, host, cwd);
     *buffer = realloc(*buffer, needed+1);
     sprintf(*buffer, "%s@%s:%s$ ", user, host, cwd);
@@ -224,7 +224,7 @@ int main(/*int argc, char *argv[]*/)
     while (1) {
         mass_signal_set(SET_IGN);
 
-        print_prompt(&prompt_buffer);
+        create_prompt_message(&prompt_buffer);
 
         line = line_leftover ? line_leftover : readline(prompt_buffer);
         if (line == NULL) {
