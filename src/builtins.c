@@ -125,6 +125,7 @@ void change_directory(int argc, char **argv )
         /* no arguments after 'cd', change directory to HOME */
         chdir(getenv("HOME"));
     } else {
+        /* Merge all argv[] strings together => handle paths with spaces in them */
         /* 0 because:
          * strlen() + 1 gives an extra '1' for at argc-1 => +1 extra
          * we must include the null terminator => -1 */
