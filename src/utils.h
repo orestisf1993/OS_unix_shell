@@ -18,7 +18,7 @@ int check_if_builtin(char *cmd);
 void call_builtin(int code, int argc, char** argv);
 
 /* builtin functions */
-void list_all(int argc, char** argv);
+void jobs_list(int argc, char** argv);
 void change_directory(int argc, char** argv);
 void shell_exit(int argc, char** argv);
 void free_all();
@@ -34,7 +34,7 @@ enum {
 typedef struct builtins_struct {
     int code;
     char *cmd;
-    void (*action)(int, char**);
+    void (*action)(int argc, char** argv);
     char *help_text;
 } builtins_struct;
 
@@ -50,7 +50,7 @@ enum {SET_DFL = 0,
      } signal_set;
 
 void shell_exit(int argc, char **argv);
-void list_all(int argc, char **argv);
+void jobs_list(int argc, char **argv);
 
 /* a single process. */
 typedef struct process {

@@ -6,27 +6,28 @@
 
 #include "utils.h"
 
-builtins_struct builtins[BUILTINS_NUM] = {
-    {EXIT_CMD  , "exit" , shell_exit          , "blank help text\n"},
-    {CD_CMD    , "cd"   , change_directory    , "blank help text\n"},
-    {JOBS_CMD  , "jobs" , list_all            , "blank help text\n"},
-    {HELP_CMD  , "help" , print_help          , "blank help text\n"}
+const builtins_struct builtins[BUILTINS_NUM] = {
+    {EXIT_CMD  , "exit" , shell_exit          , "usage:\nexit [exit_code]\n"},
+    {CD_CMD    , "cd"   , change_directory    , "usage:\ncd [dir]\n\nChange current working directory to [dir] directory\nif [dir] is blank, change the directory to HOME environmental variable\n"},
+    {JOBS_CMD  , "jobs" , jobs_list           , "usage:\njobs\n\nlist all active processes.\n"},
+    {HELP_CMD  , "help" , print_help          , "usage:\nhelp [cmd]\n\nShow help for command [cmd].\nIf [cmd] is blank show this text.\n"}
 };
 
 #define UNUSED(x) (void)(x)
-#define PRINT_NO_ARGS_MSG(thing_name) printf("%s doesn't take any arguments\n", thing_name);
+#define PRINT_NO_ARGS_MSG(thing_name) {printf("%s doesn't take that many arguments\n", thing_name);}
 
 void print_help(int argc, char** argv)
 {
-    printf("HELP:\n");
-
+    int code;
     if (argc == 2) {
-        int code = check_if_builtin(argv[1]);
-        if (code == -1) fprintf(stderr, "command not found!\n");
-        else printf("%s\n", builtins[code].help_text);
-    } else {
-        printf("generic help\n");
-    }
+        code = check_if_builtin(argv[1]);
+    } else code = HELP_CMD;
+
+    if (code == -1) fprintf(stderr, "command %s not found!\n", argv[1]);
+    else {
+        printf("Showing help for command: %s\n", builtins[code].cmd);
+        printf("-------------------------\n");
+        printf("%s\n", builtins[code].help_text);}
 }
 
 void free_all()
@@ -49,12 +50,8 @@ void shell_exit(int argc, char** argv)
     exit(0);
 }
 
-void change_directory(int argc, char** argv)
-{
-    if (argc > 1) PRINT_NO_ARGS_MSG(argv[0]);
-}
 
-void list_all(int argc, char** argv)
+void jobs_list(int argc, char** argv)
 {
     process *p;
 
@@ -70,6 +67,20 @@ void list_all(int argc, char** argv)
                 printf(" status: %d\n", p->status);
             } else printf("\n");
         }
+    }
+}
+
+void change_directory(int argc, char **argv )
+{
+    if(argc > 2) {
+        PRINT_NO_ARGS_MSG(argv[0]);
+    } else if (argc == 1) {
+        /* no arguments after 'cd', change directory to HOME */
+        chdir(getenv("HOME"));
+        /* change directory to argv[1] */
+    } else if( (chdir(argv[1]) ) == -1 ) {
+        /* error in chdir */
+        perror(argv[0]);
     }
 }
 

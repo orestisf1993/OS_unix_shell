@@ -257,6 +257,7 @@ int main(/*int argc, char *argv[]*/)
         //TODO: handle builtin commands
         if ((builtin_code = check_if_builtin(args[0])) >= 0) {
             printf("BUILTIN: code=%d argc=%d\n", builtin_code, n - 1);
+            if (run_background) fprintf(stderr, "WARNING: builtin commands cannot be run in the background\n");
             call_builtin(builtin_code, n - 1, args);
             continue_clear(&line);
             continue;
