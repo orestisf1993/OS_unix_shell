@@ -6,16 +6,28 @@
 
 #include "utils.h"
 
-#define BUILTINS_NUM 3
+builtins_struct builtins[BUILTINS_NUM] = {
+    {EXIT_CMD  , "exit" , shell_exit          , "blank help text\n"},
+    {CD_CMD    , "cd"   , change_directory    , "blank help text\n"},
+    {JOBS_CMD  , "jobs" , list_all            , "blank help text\n"},
+    {HELP_CMD  , "help" , print_help          , "blank help text\n"}
+};
+
 #define UNUSED(x) (void)(x)
+#define PRINT_NO_ARGS_MSG(thing_name) printf("%s doesn't take any arguments\n", thing_name);
 
-enum {
-    EXIT_CALL = 0,
-    CD_CALL,
-    JOBS_CALL
-} builtin_names;
+void print_help(int argc, char** argv)
+{
+    printf("HELP:\n");
 
-const char *builtins[BUILTINS_NUM];
+    if (argc == 2) {
+        int code = check_if_builtin(argv[1]);
+        if (code == -1) fprintf(stderr, "command not found!\n");
+        else printf("%s\n", builtins[code].help_text);
+    } else {
+        printf("generic help\n");
+    }
+}
 
 void free_all()
 {
@@ -28,24 +40,26 @@ void free_all()
     }
 }
 
-void shell_exit()
+void shell_exit(int argc, char** argv)
 {
-    int hist_res;
-    /* kill all background processes first and then exit shell */
+    if (argc > 1) PRINT_NO_ARGS_MSG(argv[0]);
+
     free_all();
-    hist_res = write_history(NULL);
-    if (hist_res == ENOENT) write_history(NULL);
+    write_history(NULL);
     exit(0);
 }
 
-void change_directory(char *dir)
+void change_directory(int argc, char** argv)
 {
-    UNUSED(dir);
+    if (argc > 1) PRINT_NO_ARGS_MSG(argv[0]);
 }
 
-void list_all()
+void list_all(int argc, char** argv)
 {
     process *p;
+
+    if (argc > 1) PRINT_NO_ARGS_MSG(argv[0]);
+
     printf("pid completed status\n");
     for (p = head; p != NULL; p = p->next) {
         if (p->pid) {
@@ -54,37 +68,22 @@ void list_all()
                    (p->completed) ? "COMPLETED" : "RUNNING");
             if (p->completed) {
                 printf(" status: %d\n", p->status);
-            }
-            else printf("\n");
+            } else printf("\n");
         }
     }
 }
 
-void init_builtins()
-{
-    /* initialize builtins array */
 
-    builtins[EXIT_CALL] = "exit";
-    builtins[CD_CALL] = "cd";
-    builtins[JOBS_CALL] = "jobs";
+void call_builtin(int code, int argc, char** argv)
+{
+    builtins[code].action(argc, argv);
 }
 
-void handle_builtins(int x, void *data)
+int check_if_builtin(char *cmd)
 {
-    switch(x) {
-        case EXIT_CALL:
-            shell_exit();
-        case CD_CALL:
-            change_directory((char*) data);
-    }
-}
-
-
-int check_builtins(char *cmd)
-{
-    int i;
-    for (i = 0; i < BUILTINS_NUM; ++i) {
-        if (strcmp(cmd, builtins[i]) == 0) return i;
+    int code;
+    for (code = 0; code < BUILTINS_NUM; ++code) {
+        if (strcmp(builtins[code].cmd, cmd) == 0) return code;
     }
     return -1;
 }

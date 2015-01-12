@@ -56,9 +56,9 @@ void create_prompt_message(char **buffer)
     host = shell_get_host();
     cwd = shell_get_cwd();
     needed = snprintf(NULL, 0, "%s@%s:%s$ ", user, host, cwd);
-    *buffer = realloc(*buffer, needed+1);
+    *buffer = realloc(*buffer, needed + 1);
     sprintf(*buffer, "%s@%s:%s$ ", user, host, cwd);
-    
+
     free(host);
     free(cwd);
 }
@@ -189,6 +189,7 @@ int main(/*int argc, char *argv[]*/)
     process *current;
     //~ char line[MAX_LENGTH];
     char *line;
+    int builtin_code;
     int n = 0;
     /* args is an array of strings where args from strtok are passed.
      * we don't need to call free() on args array elements. */
@@ -197,16 +198,14 @@ int main(/*int argc, char *argv[]*/)
     int run_background;
     sigset_t mask;
     char *line_leftover = NULL;
-    char *prompt_buffer=NULL;
-    
+    char *prompt_buffer = NULL;
+
     /* initialize the new signal mask */
     sigemptyset(&mask);
     sigdelset(&mask, SIGCHLD);
 
     /* welcoming message (?)*/
     //TODO: print welcoming message + help + note about history
-
-    init_builtins();
 
     /* master process entry */
     head = malloc(sizeof(process));
@@ -228,7 +227,7 @@ int main(/*int argc, char *argv[]*/)
 
         line = line_leftover ? line_leftover : readline(prompt_buffer);
         if (line == NULL) {
-            if (!interrupt_called) shell_exit();
+            if (!interrupt_called) shell_exit(0, NULL);
         } else if (strcmp(line, "") == 0) {
             continue_clear(&line);
             continue;
@@ -256,7 +255,9 @@ int main(/*int argc, char *argv[]*/)
         /* check if command is a builtin
          * args[0] currently holds the 'main' command */
         //TODO: handle builtin commands
-        if (check_builtins(args[0]) >= 0) {
+        if ((builtin_code = check_if_builtin(args[0])) >= 0) {
+            printf("BUILTIN: code=%d argc=%d\n", builtin_code, n - 1);
+            call_builtin(builtin_code, n - 1, args);
             continue_clear(&line);
             continue;
         } else {}

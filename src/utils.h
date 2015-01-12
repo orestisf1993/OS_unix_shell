@@ -12,8 +12,31 @@
 #endif
 #endif
 
-void init_builtins();
-int check_builtins(char *cmd);
+#define BUILTINS_NUM 4
+
+int check_if_builtin(char *cmd);
+void call_builtin(int code, int argc, char** argv);
+
+/* builtin functions */
+void list_all(int argc, char** argv);
+void change_directory(int argc, char** argv);
+void shell_exit(int argc, char** argv);
+void free_all();
+void print_help(int argc, char** argv);
+
+enum {
+    EXIT_CMD = 0,
+    CD_CMD,
+    JOBS_CMD,
+    HELP_CMD
+} builtin_codes_macro;
+
+typedef struct builtins_struct {
+    int code;
+    char *cmd;
+    void (*action)(int, char**);
+    char *help_text;
+} builtins_struct;
 
 
 #define MAX_LENGTH 1024
@@ -26,8 +49,8 @@ enum {SET_DFL = 0,
       SET_IGN
      } signal_set;
 
-void shell_exit();
-void list_all();
+void shell_exit(int argc, char **argv);
+void list_all(int argc, char **argv);
 
 /* a single process. */
 typedef struct process {
@@ -37,10 +60,6 @@ typedef struct process {
     int status;               /* reported status value */
     int bg;                 /* true if process is running on the background */
 } process;
-
-typedef struct cleanup {
-    char *r;
-} cleanup;
 
 process *head;
 
