@@ -23,6 +23,7 @@ void free_all();
 void print_help(int argc, char** argv);
 void history_on(int argc, char** argv);
 void history_off(int argc, char** argv);
+void print_dead(int argc, char** argv);
 
 enum {
     EXIT_CMD = 0,
@@ -31,6 +32,7 @@ enum {
     HELP_CMD,
     HOFF_CMD,
     HON_CMD,
+    PDEAD_CMD,
     BUILTINS_NUM /* length of this enumerator, must always be last */
 } builtin_codes_macro;
 

@@ -206,6 +206,7 @@ void welcoming_message()
     printf("Use the UP/DOWN arrow keys to navigate through history\n");
     printf("Type hoff if you want to disable the history log file\n");
     printf("Type hon if you want to reenable the history log file\n");
+    printf("Type pdead [on|off] to enable/disable printing the status of foreground processes on their death (always on for background processes)\n");
     printf("----------------------------------------------------\n");
     printf("\n");
 }
@@ -213,7 +214,6 @@ void welcoming_message()
 int main(/*int argc, char *argv[]*/)
 {
     process *current;
-    //~ char line[MAX_LENGTH];
     char *line;
     int builtin_code;
     int n = 0;
@@ -319,7 +319,11 @@ int main(/*int argc, char *argv[]*/)
                     sigsuspend(&mask);
                 }
                 free(current);
-            } else setpgid(pid, pid); /* theoretically a race condition. but it doesn't affect us that much. */
+            } else
+            {
+                setpgid(pid, pid); /* theoretically a race condition but it only affects interruption signals for some nanoseconds. */
+                printf("[%d] started\n", pid);
+            }
         }
         continue_clear(&line);
     }
