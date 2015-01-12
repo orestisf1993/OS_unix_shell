@@ -182,6 +182,26 @@ void continue_clear(char **line)
     *line = NULL;
 }
 
+void welcoming_message()
+{
+    printf("\n");
+    printf("------------------------------------\n");
+    printf("Aristotle University of Thessaloniki\n");
+    printf("School of Electrical and Computer Engineering\n");
+    printf("\n");
+    printf("Creating a Unix shell assignment for \"Operating Systems\" course (7th semester)\n");
+    printf("Creator: Orestis Floros-Malivitsis\n");
+    printf("----------------------------------\n");
+    printf("Type 'help [cmd]' for help on a specific command\n");
+    printf("Type 'help' for a list of all available commands\n");
+    printf("\n");
+    printf("This shell uses by default a history log located at $HOME/.history\n");
+    printf("Use the UP/DOWN arrow keys to navigate through history\n");
+    printf("Type history_off if you want to disable the history log\n");
+    printf("----------------------------------\n");
+    printf("\n");
+}
+
 int main(/*int argc, char *argv[]*/)
 {
     process *current;
@@ -202,8 +222,8 @@ int main(/*int argc, char *argv[]*/)
     sigemptyset(&mask);
     sigdelset(&mask, SIGCHLD);
 
-    /* welcoming message (?)*/
-    //TODO: print welcoming message + help + note about history
+    /* welcoming message */
+    welcoming_message();
 
     /* master process entry */
     head = malloc(sizeof(process));

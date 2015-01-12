@@ -29,6 +29,11 @@ void print_help(int argc, char** argv)
         printf("-------------------------\n");
         printf("%s\n", builtins[code].help_text);
     }
+    if (code == HELP_CMD){
+        int i;
+        printf("All available commands:\n");
+        for (i=0; i<BUILTINS_NUM; ++i) printf("%s\n", builtins[i].cmd);
+    }
 }
 
 void free_all()
