@@ -114,7 +114,6 @@ process *pop_from_pid(pid_t id_to_match)
 
 void harvest_dead_children()
 {
-    //TODO: delete instead of marking as complete
     /* This handler is called once a child process that was running in the background dies.
      * It will only find and mark as complete one process from the linked list */
     process *p;
@@ -163,10 +162,11 @@ void parse_path()
     free(path_variable);
 }
 
-void continue_clear(char *line)
+void continue_clear(char **line)
 {
     interrupt_called = 0;
-    free(line);
+    free(*line);
+    *line = NULL;
 }
 
 int main(/*int argc, char *argv[]*/)
@@ -175,8 +175,9 @@ int main(/*int argc, char *argv[]*/)
     //~ char line[MAX_LENGTH];
     char *line;
     int n = 0;
-    /* args is an array of strings where args from strtok are passed */
-    char *args[MAX_ARGS + 2];
+    /* args is an array of strings where args from strtok are passed.
+     * we don't need to call free() on args array elements. */
+    char *args[ARGS_ARRAY_LEN];
     pid_t pid;
     int run_background;
     sigset_t mask;
@@ -192,10 +193,10 @@ int main(/*int argc, char *argv[]*/)
     init_builtins();
 
     /* master process entry */
-    current = malloc(sizeof(process));
-    current->pid = 0;
-    current->next = NULL;
-    head = current;
+    head = malloc(sizeof(process));
+    head->pid = 0;
+    head->next = NULL;
+    current = head;
 
     /* handle child death */
     signal(SIGCHLD, harvest_dead_children);
@@ -216,12 +217,12 @@ int main(/*int argc, char *argv[]*/)
         if (line == NULL) {
             if (!interrupt_called) shell_exit();
         } else if (strcmp(line, "") == 0) {
-            continue_clear(line);
+            continue_clear(&line);
             continue;
         }
 
         if (interrupt_called) {
-            continue_clear(line);
+            continue_clear(&line);
             continue;
         } else add_history(line);
 
@@ -237,14 +238,13 @@ int main(/*int argc, char *argv[]*/)
         n = 0;
         /* WARNING! strtok modifies the initial string */
         args[n++] = strtok(line, " \n");
-
         while ((args[n++] = strtok(NULL, " \n")) && n < MAX_ARGS) {}
 
         /* check if command is a builtin
          * args[0] currently holds the 'main' command */
         //TODO: handle builtin commands
         if (check_builtins(args[0]) >= 0) {
-            continue_clear(line);
+            continue_clear(&line);
             continue;
         } else {}
 
@@ -254,7 +254,6 @@ int main(/*int argc, char *argv[]*/)
         current->next = head;
         head = current;
 
-        //TODO: fix memleak of args and line
         pid = current->pid = fork();
         if (pid == -1) {
             perror("fork");
@@ -287,8 +286,7 @@ int main(/*int argc, char *argv[]*/)
             //TODO: del this
             list_all();
         }
-        continue_clear(line);
+        continue_clear(&line);
     }
-    //TODO: free some memory ;)
     return 0;
 }

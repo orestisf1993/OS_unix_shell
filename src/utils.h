@@ -18,6 +18,7 @@ int check_builtins(char *cmd);
 
 #define MAX_LENGTH 1024
 #define MAX_ARGS 5
+#define ARGS_ARRAY_LEN MAX_ARGS + 2
 #define SIGNAL_MSG_LENGTH 100
 
 

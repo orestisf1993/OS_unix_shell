@@ -48,11 +48,15 @@ void list_all()
     process *p;
     printf("pid completed status\n");
     for (p = head; p != NULL; p = p->next) {
-        if (p->pid)
-            printf("[%d] %s status: %d\n",
+        if (p->pid) {
+            printf("[%d] %s",
                    p->pid,
-                   (p->completed) ? "COMPLETED" : "RUNNING",
-                   p->status);
+                   (p->completed) ? "COMPLETED" : "RUNNING");
+            if (p->completed) {
+                printf(" status: %d\n", p->status);
+            }
+            else printf("\n");
+        }
     }
 }
 
@@ -65,8 +69,9 @@ void init_builtins()
     builtins[JOBS_CALL] = "jobs";
 }
 
-void handle_builtins(int x, void *data){
-    switch(x){
+void handle_builtins(int x, void *data)
+{
+    switch(x) {
         case EXIT_CALL:
             shell_exit();
         case CD_CALL:
