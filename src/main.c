@@ -9,10 +9,9 @@
 
 #include "utils.h"
 
-//TODO: remove all '//' comments
+//TODO: remove all '//' comments + spell check
 #include <readline/readline.h>
 #include <readline/history.h>
-//~ #include <sys/time.h>
 
 int interrupt_called = 0;
 
@@ -188,7 +187,7 @@ int main(/*int argc, char *argv[]*/)
     sigdelset(&mask, SIGCHLD);
 
     /* welcoming message (?)*/
-    //TODO: print welcoming message
+    //TODO: print welcoming message + help + note about history
 
     init_builtins();
 
@@ -210,10 +209,8 @@ int main(/*int argc, char *argv[]*/)
 
         //~ print_prompt();
 
-        //TODO: history, history_write(), history_read() + msg
         //TODO: prompt
         line = line_leftover ? line_leftover : readline("shell: ");
-        //TODO: EXITCODES
         if (line == NULL) {
             if (!interrupt_called) shell_exit();
         } else if (strcmp(line, "") == 0) {
@@ -282,9 +279,6 @@ int main(/*int argc, char *argv[]*/)
                 }
                 free(current);
             } else setpgid(pid, pid); /* theoretically a race condition. but it doesn't affect us that much. */
-
-            //TODO: del this
-            list_all();
         }
         continue_clear(&line);
     }
