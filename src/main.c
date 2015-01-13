@@ -141,22 +141,23 @@ void harvest_dead_child()
         char msg[SIGNAL_MSG_LENGTH];
         sprintf(msg, "[%d] exited with status %d", target_id, status);
         psignal(WTERMSIG(status), msg);
-    }
-    else if(always_print_dead) printf("[%d] exited with status %d\n", target_id, status);
+    } else if(always_print_dead) printf("[%d] exited with status %d\n", target_id, status);
 
     if ((p = pop_from_pid(target_id)) == NULL)
         fprintf(stderr, "ERROR: terminated child not found in process linked list\n");
     else {
         p->completed = 1;
         p->status = status;
-        if (p->bg)
-        {
+        if (p->bg) {
             free(p); /* don't free fg processes, main() does it */
-            if (!always_print_dead && !WIFSIGNALED(status)){
+            if (!always_print_dead && !WIFSIGNALED(status)) {
                 printf("[%d] exited with status %d\n", target_id, status);
             }
+            /* reset the display once printing is done */
+            rl_forced_update_display();
         }
     }
+
 }
 
 void parse_path()
