@@ -2,8 +2,3 @@
 .geanyprj
 .fuse_hidden*
 shell
-t
-wt
-*test.c
-osl
-only_sleep.c

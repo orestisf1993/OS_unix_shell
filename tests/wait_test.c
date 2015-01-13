@@ -1,0 +1,11 @@
+#include <stdio.h>
+
+int main()
+{
+    int i = 0;
+    for(i=0; i<10; ++i) {
+        sleep(1);
+        printf("%d print from wait_test!\n", i);
+    }
+    return 0;
+}
