@@ -13,7 +13,8 @@ const builtins_struct builtins[BUILTINS_NUM] = {
     {HELP_CMD    , "help"   , print_help          , "usage:\nhelp [cmd]\n\nShow help for command [cmd].\nIf [cmd] is blank show this text.\n"},
     {HOFF_CMD    , "hoff"   , history_off         , "usage:\nhoff\n\nhoff disables the history log\n"},
     {HON_CMD     , "hon"    , history_on          , "usage:\nhon\n\nhon enables the history log\n"},
-    {PDEAD_CMD   , "pdead"  , print_dead          , "usage:\npdead [on|off]\n\n enables/disables printing of foreground processes' status on their death.\n"}
+    {PDEAD_CMD   , "pdead"  , print_dead          , "usage:\npdead [on|off]\n\n enables/disables printing of foreground processes' status on their death.\n"},
+    {PWD_CMD     , "pwd"    , print_wd            , "usage:\npwd\n\n prints the current working directory.\n"}
 };
 
 /**
@@ -23,8 +24,20 @@ const builtins_struct builtins[BUILTINS_NUM] = {
  */
 #define PRINT_BAD_ARGS_MSG(thing_name) {printf("%s: invalid usage\n", thing_name);}
 
-extern int always_print_dead;
+extern char* shell_get_cwd();
+void print_wd(int argc, char** argv){
+    char* cwd;
+    if (argc > 1) {
+        PRINT_BAD_ARGS_MSG(argv[0]);
+        return;
+    }
+    cwd = shell_get_cwd();
+    printf("%s\n", cwd);
+    free(cwd);
+    return;
+}
 
+extern int always_print_dead;
 /**
  * @brief enable/disable always printing child death.
  * @param argc argument count, should be 2.
