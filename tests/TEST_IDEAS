@@ -1,6 +1,0 @@
-* background printing + foreground commands
-* exit code with `echo $?`
-* execute programs from PATH
-* 'command & command'
-* hon / hoff
-* child death printing
