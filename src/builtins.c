@@ -6,9 +6,10 @@
 
 #include "utils.h"
 
-const builtins_struct builtins[BUILTINS_NUM] = {
+/** structure that holds all the implemented builtins. */
+const builtin_struct builtins[BUILTINS_NUM] = {
     {EXIT_CMD    , "exit"   , shell_exit          , "usage:\nexit [exit_code]\n\nDefault value of [exit_code] is 0\n"},
-    {CD_CMD      , "cd"     , change_directory    , "usage:\ncd [dir]\n\nChange current working directory to [dir] directory (spaces don't need to be escaped)\nif [dir] is blank, change the directory to HOME environmental variable\n"},
+    {CD_CMD      , "cd"     , change_directory    , "usage:\ncd [dir]\n\nChange current working directory to [dir] directory (spaces don't need to be escaped)\nif [dir] is blank, change the directory to HOME Unix environmental variable\n"},
     {JOBS_CMD    , "jobs"   , jobs_list           , "usage:\njobs\n\nlist all active processes.\n"},
     {HELP_CMD    , "help"   , print_help          , "usage:\nhelp [cmd]\n\nShow help for command [cmd].\nIf [cmd] is blank show this text.\n"},
     {HOFF_CMD    , "hoff"   , history_off         , "usage:\nhoff\n\nhoff disables the history log\n"},
@@ -66,7 +67,9 @@ void print_dead(int argc, char** argv){
     else fprintf(stderr, "%s: invalid option\n", argv[0]);
 }
 
+/** True if log file (~/.history) is enabled. */
 int save_history_to_file = 1;
+
 /**
  * @brief enables history logging.
  * @param argc unused
