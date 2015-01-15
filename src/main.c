@@ -36,8 +36,6 @@ char* shell_get_cwd()
  * @brief Get the current hostname.
  * @returns a char* with the current hostname malloced for HOST_NAME_MAX bytes.
  * @returns NULL on failure.
- *
- *
  */
 char* shell_get_host()
 {
@@ -54,6 +52,7 @@ char* shell_get_host()
  * @brief Get the current username.
  * @returns a char* with the current username.
  * @returns NULL on failure.
+ * 
  * Uses the getpwuid() function that returns a pointer to a structure containing the info that interest us.
  * No need to free anything returned by this function.
  */
@@ -107,8 +106,6 @@ void interrupt_handle()
 /**
  * @brief Sets the behavior for some interrupting signals.
  * @param handler_code set to SET_DFL or SET_IGN.
- *
- *
  */
 void mass_signal_set(int handler_code)
 {
@@ -157,6 +154,7 @@ int check_background(char *s)
  * @param id_to_match the id to search for.
  * @returns a pointer to the process that matches the given id.
  * @returns NULL if no process with the given id is found.
+ * 
  * Pointer p iterates throughout the linked list.
  * Once it finds the target the previous process is linked with the next.
  */
@@ -183,11 +181,12 @@ process *pop_from_pid(pid_t id_to_match)
     return NULL;
 }
 
-/** If True all processes that die are printed (not only bg). */
+/*! If True all processes that die are printed (not only bg). */
 int always_print_dead = 0;
 
 /**
  * @brief handle dead processes.
+ * 
  * This handler is called once a child process that was running in the background dies.
  * It will only find and mark as complete one process from the linked list.
  */
@@ -290,6 +289,10 @@ void welcoming_message()
  * @brief main function containing the main loop.
  * @returns when 1==False...
  *
+ * contains the main loop, initializes head, passes arguments to new processes,
+ * handles signals, asks for user input through the readline library,
+ * keep history, parses user input, splits it with strtok(),
+ * checks for builtin commands, forks and handles processes.
  */
 int main(/*int argc, char *argv[]*/)
 {
