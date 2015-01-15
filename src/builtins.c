@@ -24,8 +24,8 @@ const builtins_struct builtins[BUILTINS_NUM] = {
  */
 #define PRINT_BAD_ARGS_MSG(thing_name) {printf("%s: invalid usage\n", thing_name);}
 
-extern char* shell_get_cwd();
 void print_wd(int argc, char** argv){
+    extern char* shell_get_cwd();
     char* cwd;
     if (argc > 1) {
         PRINT_BAD_ARGS_MSG(argv[0]);
@@ -37,13 +37,13 @@ void print_wd(int argc, char** argv){
     return;
 }
 
-extern int always_print_dead;
 /**
  * @brief enable/disable always printing child death.
  * @param argc argument count, should be 2.
  * @param argv argv[1] should contain "on" or "off" string.
  */
 void print_dead(int argc, char** argv){
+    extern int always_print_dead;
     if (argc != 2) {
         PRINT_BAD_ARGS_MSG(argv[0]);
         return;
