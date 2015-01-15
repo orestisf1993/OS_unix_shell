@@ -334,7 +334,7 @@ int main(/*int argc, char *argv[]*/)
         create_prompt_message(&prompt_buffer);
         line = readline(prompt_buffer);
         if (line == NULL) {
-            if (!interrupt_called) shell_exit(0, NULL); /*ctrl-d <=> EOT etc... */
+            if (!interrupt_called) call_builtin(EXIT_CMD, 1, NULL); /*ctrl-d <=> EOT etc... */
         } else if (strcmp(line, "") == 0) {
             /* empty line. User just pressed 'enter' (?) */
             continue_clear(&line);
