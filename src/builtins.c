@@ -24,6 +24,11 @@ const builtins_struct builtins[BUILTINS_NUM] = {
  */
 #define PRINT_BAD_ARGS_MSG(thing_name) {printf("%s: invalid usage\n", thing_name);}
 
+/**
+ * @brief prints the current working directory.
+ * @param unused.
+ * @param unused.
+ */
 void print_wd(int argc, char** argv){
     extern char* shell_get_cwd();
     char* cwd;
