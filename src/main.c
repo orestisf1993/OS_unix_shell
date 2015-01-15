@@ -12,18 +12,33 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+/** Sets to True if a user uses ctrl-c (interruption / escape) while typing.
+ *  Once set the main loop will skip the current line, free it and reset the prompt.
+ *  Default value is False and it is reset at every loop. */
 int interrupt_called = 0;
 
+/**
+ * @brief Get the current workind directory.
+ * @returns a char* with the current working directory malloced for a length of PATH_MAX.
+ * @returns NULL on failure.
+ */
 char* shell_get_cwd()
 {
-    char *cwd = malloc(PATH_MAX);
-    if(getcwd(cwd, PATH_MAX)) return cwd;
+    char *cwd = malloc(PATH_MAX * sizeof(char));
+    if(getcwd(cwd, PATH_MAX * sizeof(char))) return cwd;
     else {
         perror("cwd");
         return NULL;
     }
 }
 
+/**
+ * @brief Get the current hostname.
+ * @returns a char* with the current hostname malloced for HOST_NAME_MAX bytes.
+ * @returns NULL on failure.
+ *
+ *
+ */
 char* shell_get_host()
 {
     char *hostname = malloc(HOST_NAME_MAX);
@@ -35,6 +50,13 @@ char* shell_get_host()
     }
 }
 
+/**
+ * @brief Get the current username.
+ * @returns a char* with the current username.
+ * @returns NULL on failure.
+ * Uses the getpwuid() function that returns a pointer to a structure containing the info that interest us.
+ * No need to free anything returned by this function.
+ */
 char* shell_get_user()
 {
     struct passwd *p = getpwuid(getuid());
@@ -44,6 +66,10 @@ char* shell_get_user()
     } else return p->pw_name;
 }
 
+/**
+ * @brief Build the prompt message on a buffer.
+ * @param buffer the buffer where the output is stored.
+ */
 void create_prompt_message(char **buffer)
 {
     size_t needed;
@@ -51,28 +77,43 @@ void create_prompt_message(char **buffer)
     char *user;
     char *cwd;
 
+    /* get the strings we need using the shell_get*() functions */
     user = shell_get_user();
     host = shell_get_host();
     cwd = shell_get_cwd();
+    /* calculate the bytes we need to allocate using snprintf. */
     needed = snprintf(NULL, 0, "%s@%s:%s$ ", user, host, cwd);
     *buffer = realloc(*buffer, needed + 1);
     sprintf(*buffer, "%s@%s:%s$ ", user, host, cwd);
 
+    /* free host and cwd.
+     * No need to free anything from the structure returned by getpwuid() (used by shell_get_user()). */
     free(host);
     free(cwd);
 }
 
+/**
+ * @brief Handles interrupts (e.g. ctrl-c) that happen while the main process is running.
+ */
 void interrupt_handle()
 {
     printf("\n");
     fflush(stdin);
     fflush(stdout);
+    /* set global variable to True because this function is called on interruption signals */
     interrupt_called = 1;
 }
 
+/**
+ * @brief Sets the behavior for some interrupting signals.
+ * @param handler_code set to SET_DFL or SET_IGN.
+ *
+ *
+ */
 void mass_signal_set(int handler_code)
 {
     switch(handler_code) {
+        /* default behavior */
         case SET_DFL:
             signal (SIGINT,  SIG_DFL);
             signal (SIGQUIT, SIG_DFL);
@@ -88,6 +129,15 @@ void mass_signal_set(int handler_code)
     }
 }
 
+/**
+ * @brief check if the command inputed by the user must be run in the bacground.
+ * @param s is the string that is searched.
+ * @returns the position of the ampersand if found.
+ * @returns -1 if not found.
+ *
+ * Search for an ampersand ('&') in the string \a s passed as an argument.
+ * If such a character is found replace it with the '\0' character.
+ */
 int check_background(char *s)
 {
     /* if the last char is an ampersand replace it with '\0' */
@@ -102,38 +152,52 @@ int check_background(char *s)
     }
 }
 
+/**
+ * @brief Tries to find a process in the linked list with a specific id.
+ * @param id_to_match the id to search for.
+ * @returns a pointer to the process that matches the given id.
+ * @returns NULL if no process with the given id is found.
+ * Pointer p iterates throughout the linked list.
+ * Once it finds the target the previous process is linked with the next.
+ */
 process *pop_from_pid(pid_t id_to_match)
 {
-    /* returns a pointer to the process tha matches the given id */
-    process *p;
-    process *previous;
+    process *p;         /* Pointer that will iterate throughout the linked list */
+    process *previous;  /* Pointer to the process behind p */
 
+    /* start with the head */
     previous = head;
-    if (previous->pid == id_to_match) {
-        head = previous->next;
+    if (head->pid == id_to_match) {
+        /* The head process (1st element in the linked list) has the targeted id.
+         * The next process now becomes the head. */
+        head = head->next;
         return previous;
     }
 
     for (p = head->next; p != NULL; previous = p, p = p->next) {
         if (p->pid == id_to_match) {
-            printf("PR_NEXT: %d P_NEXT: %d\n", previous->next->pid, p->next->pid);
             previous->next = p->next;
-            printf("AFTER: %d\n", previous->next->pid);
             return p;
         }
     }
     return NULL;
 }
 
+/** If True all processes that die are printed (not only bg). */
 int always_print_dead = 0;
+
+/**
+ * @brief handle dead processes.
+ * This handler is called once a child process that was running in the background dies.
+ * It will only find and mark as complete one process from the linked list.
+ */
 void harvest_dead_child()
 {
-    /* This handler is called once a child process that was running in the background dies.
-     * It will only find and mark as complete one process from the linked list */
     process *p;
     pid_t target_id;
     int status;
 
+    /* waitpid() will find the process that exited. */
     while ((target_id = waitpid(-1, &status, WNOHANG)) < 0) {}
     if (WIFSIGNALED(status)) {
         /* child process was terminated by a signal
@@ -149,17 +213,20 @@ void harvest_dead_child()
         p->completed = 1;
         p->status = status;
         if (p->bg) {
-            free(p); /* don't free fg processes, main() does it */
+            free(p); /* don't free fg processes, main() does it. */
             if (!always_print_dead && !WIFSIGNALED(status)) {
                 printf("[%d] exited with status %d\n", target_id, status);
             }
-            /* reset the display once printing is done */
+            /* reset the display once printing is done. */
             rl_forced_update_display();
         }
     }
 
 }
 
+/**
+ * @brief parses the PATH environmental variable. Currently useless.
+ */
 void parse_path()
 {
     char *path_variable;
@@ -182,6 +249,10 @@ void parse_path()
     free(path_variable);
 }
 
+/**
+ * @brief free memory of line and reset some flags.
+ * @param line Pointer to the line string that needs to be freed.
+ */
 void continue_clear(char **line)
 {
     interrupt_called = 0;
@@ -189,6 +260,9 @@ void continue_clear(char **line)
     *line = NULL;
 }
 
+/**
+ * @brief Print the welcoming message.
+ */
 void welcoming_message()
 {
     printf("\n");
@@ -212,19 +286,23 @@ void welcoming_message()
     printf("\n");
 }
 
+/**
+ * @brief main function containing the main loop.
+ * @returns when 1==False...
+ *
+ */
 int main(/*int argc, char *argv[]*/)
 {
-    process *current;
-    char *line;
-    int builtin_code;
-    int n = 0;
-    /* args is an array of strings where args from strtok are passed.
-     * we don't need to call free() on args array elements. */
-    char *args[ARGS_ARRAY_LEN];
-    pid_t pid;
-    int run_background;
-    sigset_t mask;
-    char *line_leftover = NULL;
+    pid_t pid;          /* pid value used in fork() */
+    process *current;   /* pointer to the current process struct */
+    char *line;         /* the current line read */
+    int builtin_code;   /* used when a builtin command is detected */
+    int argc = 0;       /* number of args, strtok found */
+    /* argv is an array of strings where the args from strtok are passed.
+     * we don't need to call free() on argv array elements. */
+    char *argv[ARGS_ARRAY_LEN];
+    int run_background; /* flag set to True when the command needs to be run at the background */
+    sigset_t mask;      /* signal mask used by sigsupsend() */
     char *prompt_buffer = NULL;
 
     /* initialize the new signal mask */
@@ -247,46 +325,52 @@ int main(/*int argc, char *argv[]*/)
     read_history(NULL);
 
     while (1) {
+        /* Shell shouldn't terminate on signals */
         mass_signal_set(SET_IGN);
 
         create_prompt_message(&prompt_buffer);
-
-        line = line_leftover ? line_leftover : readline(prompt_buffer);
+        line = readline(prompt_buffer);
         if (line == NULL) {
-            if (!interrupt_called) shell_exit(0, NULL);
+            if (!interrupt_called) shell_exit(0, NULL); /*ctrl-d <=> EOT etc... */
         } else if (strcmp(line, "") == 0) {
+            /* empty line. User just pressed 'enter' (?) */
             continue_clear(&line);
             continue;
         }
 
         if (interrupt_called) {
+            /* happens on ctrl-c / interruption. Skip the whole line and don't add it in history log. */
             continue_clear(&line);
             continue;
         } else add_history(line);
 
-        /* check if process should be run in the background before we edit 'line' */
+        /* check if process should be run in the background before we edit 'line' *
+         * run_background holds the value of check_background(). */
         if ((run_background = check_background(line)) == -1) {
+            /* not a background_process set the flag to zero.*/
             run_background = 0;
-            line_leftover = NULL;
         } else {
-            if(line[run_background + 1]) line_leftover = strdup(&line[run_background + 1]);
-            run_background = 1;
+            run_background = 1; /* just set to True and use as a flag from now on */
         }
 
-        n = 0;
+        argc = 0;
         /* WARNING! strtok modifies the initial string */
-        args[n++] = strtok(line, " \n");
-        while ((args[n++] = strtok(NULL, " \n")) && n < MAX_ARGS) {}
+        /* " \n" is the delimiter. Split the string on ' ' and '\n' although readline() does not include '\n' */
+        argv[argc++] = strtok(line, " \n"); /* line must be used as an argument for strtok(), then passing NULL uses line again */
+        while ((argv[argc++] = strtok(NULL, " \n")) && argc < MAX_ARGS) {
+            /* Splitting stops once the max number of arguments is reached or once strtok() returns NULL */
+        }
 
         /* check if command is a builtin
-         * args[0] currently holds the 'main' command */
-        if ((builtin_code = check_if_builtin(args[0])) >= 0) {
-            if (run_background) fprintf(stderr, "WARNING: builtin commands cannot be run in the background\n");
-            call_builtin(builtin_code, n - 1, args);
+         * argv[0] currently holds the 'main' command */
+        if ((builtin_code = check_if_builtin(argv[0])) >= 0) {
+            if (run_background) fprintf(stderr, "WARNING: builtin commands cannot be run in the background! Ignoring...\n");
+            call_builtin(builtin_code, argc - 1, argv);
             continue_clear(&line);
             continue;
-        } else {}
+        }
 
+        /* allocate space for a new process struct. */
         current = malloc(sizeof(process));
         current->completed = 0;
         current->bg = run_background;
@@ -300,10 +384,10 @@ int main(/*int argc, char *argv[]*/)
         } else if (pid == 0) {
             /* child */
             mass_signal_set(SET_DFL);
-            if (execvp(args[0], args) < 0) {
+            if (execvp(argv[0], argv) < 0) {
                 /* execv returns error */
-                perror(args[0]);
-                _exit(EXIT_FAILURE);   /* exec never returns */
+                perror(argv[0]);
+                _exit(EXIT_FAILURE);   /* exec shouldn't return */
             }
         } else {
             /* parent */
@@ -311,22 +395,21 @@ int main(/*int argc, char *argv[]*/)
                 /* foreground process */
                 /* This is NOT a race condition:
                  * if the child process dies before this point of the code is reached,
-                 * current->complete is already TRUE because harvest_dead_child()
-                 * has already been called and the while loop is never executed */
+                 * current->complete is already TRUE because harvest_dead_child() has already been called and the while loop is never executed */
                 while(!(current->completed)) {
-                    /* suspend until SIGCHLD signal is received
-                     * but does not block the signal, so the handler is executed normally */
-                    /*sigsupsend always returns -1 */
+                    /* suspends until SIGCHLD signal is received
+                     * but does not block the signal, so the handler is executed normally
+                     * sigsupsend() always returns -1 */
                     sigsuspend(&mask);
                 }
-                free(current);
-            } else
-            {
-                setpgid(pid, pid); /* theoretically a race condition but it only affects interruption signals for some nanoseconds. */
+                free(current); /* free the finished process. bg processes are freed by harvest_dead_child() */
+            } else {
+                /* theoretically a race condition but it only affects interruption signals for some nanoseconds. */
+                setpgid(pid, pid);
                 printf("[%d] started\n", pid);
             }
         }
         continue_clear(&line);
     }
-    return 0;
+    return -1;
 }
