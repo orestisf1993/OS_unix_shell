@@ -3,3 +3,4 @@
 .fuse_hidden*
 shell
 doc/html/
+.~lock*
