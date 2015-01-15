@@ -24,6 +24,9 @@
  *  Default value is False and it is reset at every loop. */
 int interrupt_called = 0;
 
+/** pointer to the current process struct */
+process *current;   
+
 /**
  * @brief Get the current workind directory.
  * @returns a char* with the current working directory malloced for a length of PATH_MAX.
@@ -99,7 +102,7 @@ void create_prompt_message(char **buffer)
 }
 
 /**
- * @brief Handles interrupts (e.g. ctrl-c) that happen while the main process is running.
+ * @brief Handles interrupts (e.g. ctrl-c) that happen while the main process is running without a foreground process active.
  */
 void interrupt_handle()
 {
@@ -108,6 +111,37 @@ void interrupt_handle()
     fflush(stdout);
     /* set global variable to True because this function is called on interruption signals */
     interrupt_called = 1;
+}
+
+/** the prompt shown when the user is asked to confirm the process kill */
+#define KILL_MSG "terminate foreground process with pid %d? (Y/N/a - always)\n"
+
+/** if false the active process is always killed when ctrl-c is pressed */
+int ask_to_kill = 1;
+
+/**
+ * @brief Handles interrupts (e.g. ctrl-c) that happen while the main process is running with a foreground process active.
+ *
+ * asks the user to confirm killing the foreground process. If \a ask_to_kill is set to false, the foreground process is always killed.
+ */
+void killer_interrupt_handle(){
+    char *line;
+    char msg[sizeof(KILL_MSG) + MAX_PID_LENGTH];
+    int no_kill = 1;
+    while (ask_to_kill && no_kill)
+    {
+        sprintf(msg, KILL_MSG, current->pid);
+        line = readline(msg);
+        if (line==NULL) continue;
+        else if (strcasecmp(line, "y") == 0) no_kill = 0;
+        else if (strcasecmp(line, "n") == 0) return;
+        else if (strcasecmp(line, "a") == 0) ask_to_kill = no_kill = 0;
+        else printf("wrong option\n");
+    }
+    if (current->completed){
+        printf("process already dead\n");
+    }
+    else kill(current->pid, SIGTERM);    
 }
 
 /**
@@ -304,7 +338,6 @@ void welcoming_message()
 int main(/*int argc, char *argv[]*/)
 {
     pid_t pid;          /* pid value used in fork() */
-    process *current;   /* pointer to the current process struct */
     char *line;         /* the current line read */
     int builtin_code;   /* used when a builtin command is detected */
     int argc = 0;       /* number of args, strtok found */
@@ -401,6 +434,8 @@ int main(/*int argc, char *argv[]*/)
             }
         } else {
             /* parent */
+            setpgid(pid, pid);
+            signal(SIGINT, killer_interrupt_handle);
             if (!run_background) {
                 /* foreground process */
                 /* This is NOT a race condition:
@@ -415,7 +450,6 @@ int main(/*int argc, char *argv[]*/)
                 free(current); /* free the finished process. bg processes are freed by harvest_dead_child() */
             } else {
                 /* theoretically a race condition but it only affects interruption signals for some nanoseconds. */
-                setpgid(pid, pid);
                 printf("[%d] started\n", pid);
             }
         }

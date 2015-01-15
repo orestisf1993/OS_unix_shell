@@ -80,6 +80,11 @@ typedef struct builtin_struct {
 #define MAX_LENGTH 1024
 
 /**
+ * @brief max length of pid as a string.
+ */
+#define MAX_PID_LENGTH 10
+
+/**
  * @brief the maximum number of arguments the user can input for a command.
  *
  * Does not include argv[0] (command name). If the user enters more arguments they will be ignored.
