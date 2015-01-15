@@ -360,7 +360,7 @@ int main(/*int argc, char *argv[]*/)
         /* WARNING! strtok modifies the initial string */
         /* " \n" is the delimiter. Split the string on ' ' and '\n' although readline() does not include '\n' */
         argv[argc++] = strtok(line, " \n"); /* line must be used as an argument for strtok(), then passing NULL uses line again */
-        while ((argv[argc++] = strtok(NULL, " \n")) && argc < MAX_ARGS) {
+        while ((argv[argc++] = strtok(NULL, " \n")) && argc <= MAX_ARGS) {
             /* Splitting stops once the max number of arguments is reached or once strtok() returns NULL */
         }
 
