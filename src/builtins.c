@@ -16,9 +16,23 @@ const builtins_struct builtins[BUILTINS_NUM] = {
     {PDEAD_CMD   , "pdead"  , print_dead          , "usage:\npdead [on|off]\n\n enables/disables printing of foreground processes' status on their death.\n"}
 };
 
+/**
+ * @brief 
+ * @param thing_name 
+ * @returns 
+ * 
+ * 
+ */
 #define PRINT_BAD_ARGS_MSG(thing_name) {printf("%s: invalid usage\n", thing_name);}
 
 extern int always_print_dead;
+/**
+ * @brief 
+ * @param argc 
+ * @param argv 
+ * 
+ * 
+ */
 void print_dead(int argc, char** argv){
     if (argc != 2) {
         PRINT_BAD_ARGS_MSG(argv[0]);
@@ -38,6 +52,13 @@ void print_dead(int argc, char** argv){
 }
 
 int save_history_to_file = 1;
+/**
+ * @brief 
+ * @param argc 
+ * @param argv 
+ * 
+ * 
+ */
 void history_on(int argc, char** argv)
 {
     if (argc > 1) {
@@ -48,6 +69,13 @@ void history_on(int argc, char** argv)
     save_history_to_file = 1;
 }
 
+/**
+ * @brief 
+ * @param argc 
+ * @param argv 
+ * 
+ * 
+ */
 void history_off(int argc, char** argv)
 {
     if (argc > 1) {
@@ -58,6 +86,13 @@ void history_off(int argc, char** argv)
     save_history_to_file = 0;
 }
 
+/**
+ * @brief 
+ * @param argc 
+ * @param argv 
+ * 
+ * 
+ */
 void print_help(int argc, char** argv)
 {
     int code;
@@ -78,6 +113,11 @@ void print_help(int argc, char** argv)
     }
 }
 
+/**
+ * @brief 
+ * 
+ * 
+ */
 void free_all()
 {
     process *p;
@@ -89,6 +129,13 @@ void free_all()
     }
 }
 
+/**
+ * @brief 
+ * @param argc 
+ * @param argv 
+ * 
+ * 
+ */
 void shell_exit(int argc, char** argv)
 {
     int exit_code = 0;
@@ -101,6 +148,13 @@ void shell_exit(int argc, char** argv)
 }
 
 
+/**
+ * @brief 
+ * @param argc 
+ * @param argv 
+ * 
+ * 
+ */
 void jobs_list(int argc, char** argv)
 {
     process *p;
@@ -119,6 +173,13 @@ void jobs_list(int argc, char** argv)
     }
 }
 
+/**
+ * @brief 
+ * @param argc 
+ * @param argv 
+ * 
+ * 
+ */
 void change_directory(int argc, char **argv )
 {
     if (argc == 1) {
@@ -151,11 +212,26 @@ void change_directory(int argc, char **argv )
 }
 
 
+/**
+ * @brief 
+ * @param code 
+ * @param argc 
+ * @param argv 
+ * 
+ * 
+ */
 void call_builtin(int code, int argc, char** argv)
 {
     builtins[code].action(argc, argv);
 }
 
+/**
+ * @brief 
+ * @param cmd 
+ * @returns 
+ * 
+ * 
+ */
 int check_if_builtin(char *cmd)
 {
     int code;
