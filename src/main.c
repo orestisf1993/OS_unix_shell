@@ -437,7 +437,7 @@ int main(/*int argc, char *argv[]*/)
             setpgid(pid, pid);
             signal(SIGINT, killer_interrupt_handle);
             if (!run_background) {
-                /* foreground process */
+                /* foreground process, handle child death */
                 /* This is NOT a race condition:
                  * if the child process dies before this point of the code is reached,
                  * current->complete is already TRUE because harvest_dead_child() has already been called and the while loop is never executed */
@@ -449,7 +449,6 @@ int main(/*int argc, char *argv[]*/)
                 }
                 free(current); /* free the finished process. bg processes are freed by harvest_dead_child() */
             } else {
-                /* theoretically a race condition but it only affects interruption signals for some nanoseconds. */
                 printf("[%d] started\n", pid);
             }
         }
