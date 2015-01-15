@@ -1,3 +1,10 @@
+/** \file utils.h
+* \brief header file
+*
+* declares macros related to array lengths, solve some portability problems,
+* manage declarations.
+*/
+
 #ifndef SHELL_UTILS
 #define SHELL_UTILS
 

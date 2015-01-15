@@ -1,3 +1,10 @@
+/** \file main.c
+* \brief the main program.
+* 
+* contains the main loop in main() and important functions related to input,
+* handling processes and signals.
+*/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

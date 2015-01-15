@@ -1,3 +1,10 @@
+/** \file builtins.c
+* \brief file holding functions related to the shell's builtin commands.
+*
+* defines the \a builtins[] struct and holds the code of functions that implement
+* those builtin commands. 
+*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
