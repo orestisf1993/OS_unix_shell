@@ -2,7 +2,7 @@
 * \brief file holding functions related to the shell's builtin commands.
 *
 * defines the \a builtins[] struct and holds the code of functions that implement
-* those builtin commands. 
+* those builtin commands.
 */
 
 #include <stdlib.h>
@@ -37,7 +37,8 @@ const builtin_struct builtins[BUILTINS_NUM] = {
  * @param unused.
  * @param unused.
  */
-void print_wd(int argc, char** argv){
+void print_wd(int argc, char** argv)
+{
     extern char* shell_get_cwd();
     char* cwd;
     if (argc > 1) {
@@ -55,23 +56,20 @@ void print_wd(int argc, char** argv){
  * @param argc argument count, should be 2.
  * @param argv argv[1] should contain "on" or "off" string.
  */
-void print_dead(int argc, char** argv){
+void print_dead(int argc, char** argv)
+{
     extern int always_print_dead;
     if (argc != 2) {
         PRINT_BAD_ARGS_MSG(argv[0]);
         return;
     }
-    if (strcmp(argv[1], "on") == 0)
-    {
-        printf("print dead processes: %s -> ENABLED\n", always_print_dead? "ENABLED" : "DISABLED");
+    if (strcmp(argv[1], "on") == 0) {
+        printf("print dead processes: %s -> ENABLED\n", always_print_dead ? "ENABLED" : "DISABLED");
         always_print_dead = 1;
-    }
-    else if (strcmp(argv[1], "off") == 0)
-    {
-        printf("print dead processes: %s -> DISABLED\n", always_print_dead? "ENABLED" : "DISABLED");
+    } else if (strcmp(argv[1], "off") == 0) {
+        printf("print dead processes: %s -> DISABLED\n", always_print_dead ? "ENABLED" : "DISABLED");
         always_print_dead = 0;
-    }
-    else fprintf(stderr, "%s: invalid option\n", argv[0]);
+    } else fprintf(stderr, "%s: invalid option\n", argv[0]);
 }
 
 /** True if log file (~/.history) is enabled. */
@@ -88,7 +86,7 @@ void history_on(int argc, char** argv)
         PRINT_BAD_ARGS_MSG(argv[0]);
         return;
     }
-    printf("history: %s -> ENABLED\n", save_history_to_file? "ENABLED" : "DISABLED");
+    printf("history: %s -> ENABLED\n", save_history_to_file ? "ENABLED" : "DISABLED");
     save_history_to_file = 1;
 }
 
@@ -103,7 +101,7 @@ void history_off(int argc, char** argv)
         PRINT_BAD_ARGS_MSG(argv[0]);
         return;
     }
-    printf("history: %s -> DISABLED\n", save_history_to_file? "ENABLED" : "DISABLED");
+    printf("history: %s -> DISABLED\n", save_history_to_file ? "ENABLED" : "DISABLED");
     save_history_to_file = 0;
 }
 
@@ -131,10 +129,10 @@ void print_help(int argc, char** argv)
         printf("-------------------------\n");
         printf("%s\n", builtins[code].help_text);
     }
-    if (code == HELP_CMD){
+    if (code == HELP_CMD) {
         int i;
         printf("All available commands:\n");
-        for (i=0; i<BUILTINS_NUM; ++i) printf("%s\n", builtins[i].cmd);
+        for (i = 0; i < BUILTINS_NUM; ++i) printf("%s\n", builtins[i].cmd);
     }
 }
 
@@ -227,17 +225,15 @@ void change_directory(int argc, char **argv)
         char *full_dir; /* final result */
         int i;
         /* start from argv[1] and calculate the total size with strlen() */
-        for (i=1; i<argc; ++i) total_size += (strlen(argv[i]) + 1) * sizeof(char);
+        for (i = 1; i < argc; ++i) total_size += (strlen(argv[i]) + 1) * sizeof(char);
         full_dir = malloc(total_size); /* allocate the calculated size */
         strcpy(full_dir, argv[1]);     /* strcpy the first string */
-        for (i=2; i<argc; ++i)
-        {
+        for (i = 2; i < argc; ++i) {
             strcat(full_dir, " ");     /* use strcat() to append a space */
             strcat(full_dir, argv[i]); /* use strcat() to append the next string */
         }
         /* call the chdir() command and detect errors */
-        if ((chdir(full_dir) ) == -1)
-        {
+        if ((chdir(full_dir) ) == -1) {
             /* error in chdir */
             perror(argv[0]);
         }

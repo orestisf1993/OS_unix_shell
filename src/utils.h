@@ -89,7 +89,7 @@ typedef struct builtin_struct {
  *
  * Does not include argv[0] (command name). If the user enters more arguments they will be ignored.
  * We can overcome this limitation if we implement the argv[] array in main() using a dynamic array.
- * 
+ *
  * example: user enters:'./t 1 2 3 4 5 6 7' with a MAX_ARGS of 4 ./t will be executed and
  * arguments 1, 2, 3 and 4 will be passed. 5, 6 and 7 will be ignored and will not cause an error.
  */

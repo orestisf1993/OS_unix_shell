@@ -1,6 +1,6 @@
 /** \file main.c
 * \brief the main program.
-* 
+*
 * contains the main loop in main() and important functions related to input,
 * handling processes and signals.
 */
@@ -25,7 +25,7 @@
 int interrupt_called = 0;
 
 /** pointer to the current process struct */
-process *current;   
+process *current;
 
 /**
  * @brief Get the current workind directory.
@@ -62,7 +62,7 @@ char* shell_get_host()
  * @brief Get the current username.
  * @returns a char* with the current username.
  * @returns NULL on failure.
- * 
+ *
  * Uses the getpwuid() function that returns a pointer to a structure containing the info that interest us.
  * No need to free anything returned by this function.
  */
@@ -124,24 +124,23 @@ int ask_to_kill = 1;
  *
  * asks the user to confirm killing the foreground process. If \a ask_to_kill is set to false, the foreground process is always killed.
  */
-void killer_interrupt_handle(){
+void killer_interrupt_handle()
+{
     char *line;
     char msg[sizeof(KILL_MSG) + MAX_PID_LENGTH];
     int no_kill = 1;
-    while (ask_to_kill && no_kill)
-    {
+    while (ask_to_kill && no_kill) {
         sprintf(msg, KILL_MSG, current->pid);
         line = readline(msg);
-        if (line==NULL) continue;
+        if (line == NULL) continue;
         else if (strcasecmp(line, "y") == 0) no_kill = 0;
         else if (strcasecmp(line, "n") == 0) return;
         else if (strcasecmp(line, "a") == 0) ask_to_kill = no_kill = 0;
         else printf("wrong option\n");
     }
-    if (current->completed){
+    if (current->completed) {
         printf("process already dead\n");
-    }
-    else kill(current->pid, SIGTERM);    
+    } else kill(current->pid, SIGTERM);
 }
 
 /**
@@ -195,7 +194,7 @@ int check_background(char *s)
  * @param id_to_match the id to search for.
  * @returns a pointer to the process that matches the given id.
  * @returns NULL if no process with the given id is found.
- * 
+ *
  * Pointer p iterates throughout the linked list.
  * Once it finds the target the previous process is linked with the next.
  */
@@ -227,7 +226,7 @@ int always_print_dead = 0;
 
 /**
  * @brief handle dead processes.
- * 
+ *
  * This handler is called once a child process that was running in the background dies.
  * It will only find and mark as complete one process from the linked list.
  */
@@ -435,12 +434,12 @@ int main(/*int argc, char *argv[]*/)
         } else {
             /* parent */
             setpgid(pid, pid);
-            signal(SIGINT, killer_interrupt_handle);
             if (!run_background) {
                 /* foreground process, handle child death */
                 /* This is NOT a race condition:
                  * if the child process dies before this point of the code is reached,
                  * current->complete is already TRUE because harvest_dead_child() has already been called and the while loop is never executed */
+                signal(SIGINT, killer_interrupt_handle);
                 while(!(current->completed)) {
                     /* suspends until SIGCHLD signal is received
                      * but does not block the signal, so the handler is executed normally
