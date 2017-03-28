@@ -35,18 +35,18 @@
 
 /* builtin related functions */
 int check_if_builtin(char *cmd);
-void call_builtin(int code, int argc, char** argv);
+void call_builtin(int code, int argc, char **argv);
 void free_all();
 
 /* builtin functions */
-void jobs_list       (int argc, char** argv);
-void change_directory(int argc, char** argv);
-void shell_exit      (int argc, char** argv);
-void print_help      (int argc, char** argv);
-void history_on      (int argc, char** argv);
-void history_off     (int argc, char** argv);
-void print_dead      (int argc, char** argv);
-void print_wd        (int argc, char** argv);
+void jobs_list(int argc, char **argv);
+void change_directory(int argc, char **argv);
+void shell_exit(int argc, char **argv);
+void print_help(int argc, char **argv);
+void history_on(int argc, char **argv);
+void history_off(int argc, char **argv);
+void print_dead(int argc, char **argv);
+void print_wd(int argc, char **argv);
 
 /**
  * @brief enum that gives values to all the builtin command codes
@@ -67,12 +67,11 @@ enum {
  * @brief a struct that implements a builtin command.
  */
 typedef struct builtin_struct {
-    int  code;       /**< builtin command code. One of the values of \enum builtin_codes_macro. */
-    char *cmd;       /**< the command that triggers the action. */
-    void (*action)(int argc, char** argv); /**< function pointer to the corresponding builtin function. */
-    char *help_text; /**< what is printed when 'help [cmd]' is called. */
+    int code;                              /**< builtin command code. One of the values of \enum builtin_codes_macro. */
+    char *cmd;                             /**< the command that triggers the action. */
+    void (*action)(int argc, char **argv); /**< function pointer to the corresponding builtin function. */
+    char *help_text;                       /**< what is printed when 'help [cmd]' is called. */
 } builtin_struct;
-
 
 /**
  * @brief max length of one line.
@@ -107,23 +106,23 @@ typedef struct builtin_struct {
  */
 #define SIGNAL_MSG_LENGTH 100
 
-
 /**
  * @brief used in mass_signal_set()
  */
-enum {SET_DFL = 0,  /**< Ignore signals */
-      SET_IGN       /**< Default behavior */
-     } signal_set;
+enum {
+    SET_DFL = 0, /**< Ignore signals */
+    SET_IGN      /**< Default behavior */
+} signal_set;
 
 /**
  * @brief struct that defines a single process
  */
 typedef struct process {
-    struct process *next;     /**< next process in list. */
-    pid_t pid;                /**< process ID. */
-    int completed;            /**< true if process is completed. */
-    int status;               /**< reported status value. */
-    int bg;                   /**< true if process is running on the background */
+    struct process *next; /**< next process in list. */
+    pid_t pid;            /**< process ID. */
+    int completed;        /**< true if process is completed. */
+    int status;           /**< reported status value. */
+    int bg;               /**< true if process is running on the background */
 } process;
 
 /** the head process is the latest added process. The head of the linked list */

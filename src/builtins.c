@@ -5,42 +5,47 @@
 * those builtin commands.
 */
 
+#include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <readline/history.h>
-#include <errno.h>
 
 #include "utils.h"
 
+#include <readline/history.h>
+
 /** structure that holds all the implemented builtins. */
 const builtin_struct builtins[BUILTINS_NUM] = {
-    {EXIT_CMD    , "exit"   , shell_exit          , "usage:\nexit [exit_code]\n\nDefault value of [exit_code] is 0\n"},
-    {CD_CMD      , "cd"     , change_directory    , "usage:\ncd [dir]\n\nChange current working directory to [dir] directory (spaces don't need to be escaped)\nif [dir] is blank, change the directory to HOME Unix environmental variable\n"},
-    {JOBS_CMD    , "jobs"   , jobs_list           , "usage:\njobs\n\nlist all active processes.\n"},
-    {HELP_CMD    , "help"   , print_help          , "usage:\nhelp [cmd]\n\nShow help for command [cmd].\nIf [cmd] is blank show this text.\n"},
-    {HOFF_CMD    , "hoff"   , history_off         , "usage:\nhoff\n\nhoff disables the history log\n"},
-    {HON_CMD     , "hon"    , history_on          , "usage:\nhon\n\nhon enables the history log\n"},
-    {PDEAD_CMD   , "pdead"  , print_dead          , "usage:\npdead [on|off]\n\n enables/disables printing of foreground processes' status on their death.\n"},
-    {PWD_CMD     , "pwd"    , print_wd            , "usage:\npwd\n\n prints the current working directory.\n"}
-};
+        {EXIT_CMD, "exit", shell_exit, "usage:\nexit [exit_code]\n\nDefault value of [exit_code] is 0\n"},
+        {CD_CMD, "cd", change_directory, "usage:\ncd [dir]\n\nChange current working directory to [dir] directory "
+                                         "(spaces don't need to be escaped)\nif [dir] is blank, change the directory "
+                                         "to HOME Unix environmental variable\n"},
+        {JOBS_CMD, "jobs", jobs_list, "usage:\njobs\n\nlist all active processes.\n"},
+        {HELP_CMD, "help", print_help,
+         "usage:\nhelp [cmd]\n\nShow help for command [cmd].\nIf [cmd] is blank show this text.\n"},
+        {HOFF_CMD, "hoff", history_off, "usage:\nhoff\n\nhoff disables the history log\n"},
+        {HON_CMD, "hon", history_on, "usage:\nhon\n\nhon enables the history log\n"},
+        {PDEAD_CMD, "pdead", print_dead,
+         "usage:\npdead [on|off]\n\n enables/disables printing of foreground processes' status on their death.\n"},
+        {PWD_CMD, "pwd", print_wd, "usage:\npwd\n\n prints the current working directory.\n"}};
 
 /**
  * @brief Prints an invalid usage message.
  * @param thing_name usually argv[0] or function name.
  * @returns nothing
  */
-#define PRINT_BAD_ARGS_MSG(thing_name) {printf("%s: invalid usage\n", thing_name);}
+#define PRINT_BAD_ARGS_MSG(thing_name)                                                                                 \
+    { printf("%s: invalid usage\n", thing_name); }
 
 /**
  * @brief prints the current working directory.
  * @param unused.
  * @param unused.
  */
-void print_wd(int argc, char** argv)
-{
-    extern char* shell_get_cwd();
-    char* cwd;
+void print_wd(int argc, char **argv) {
+    extern char *shell_get_cwd();
+    char *cwd;
     if (argc > 1) {
         PRINT_BAD_ARGS_MSG(argv[0]);
         return;
@@ -48,7 +53,6 @@ void print_wd(int argc, char** argv)
     cwd = shell_get_cwd();
     printf("%s\n", cwd);
     free(cwd);
-    return;
 }
 
 /**
@@ -56,8 +60,7 @@ void print_wd(int argc, char** argv)
  * @param argc argument count, should be 2.
  * @param argv argv[1] should contain "on" or "off" string.
  */
-void print_dead(int argc, char** argv)
-{
+void print_dead(int argc, char **argv) {
     extern int always_print_dead;
     if (argc != 2) {
         PRINT_BAD_ARGS_MSG(argv[0]);
@@ -69,7 +72,9 @@ void print_dead(int argc, char** argv)
     } else if (strcmp(argv[1], "off") == 0) {
         printf("print dead processes: %s -> DISABLED\n", always_print_dead ? "ENABLED" : "DISABLED");
         always_print_dead = 0;
-    } else fprintf(stderr, "%s: invalid option\n", argv[0]);
+    } else {
+        fprintf(stderr, "%s: invalid option\n", argv[0]);
+}
 }
 
 /** True if log file (~/.history) is enabled. */
@@ -80,8 +85,7 @@ int save_history_to_file = 1;
  * @param argc unused
  * @param argv unused
  */
-void history_on(int argc, char** argv)
-{
+void history_on(int argc, char **argv) {
     if (argc > 1) {
         PRINT_BAD_ARGS_MSG(argv[0]);
         return;
@@ -95,8 +99,7 @@ void history_on(int argc, char** argv)
  * @param argc unused
  * @param argv unused
  */
-void history_off(int argc, char** argv)
-{
+void history_off(int argc, char **argv) {
     if (argc > 1) {
         PRINT_BAD_ARGS_MSG(argv[0]);
         return;
@@ -116,15 +119,17 @@ void history_off(int argc, char** argv)
  * 'help help' was called by setting the code to HELP_CMD. When the code is
  * HELP_CMD a list of all available commands is also printed.
  */
-void print_help(int argc, char** argv)
-{
+void print_help(int argc, char **argv) {
     int code;
     if (argc == 2) {
         code = check_if_builtin(argv[1]);
-    } else code = HELP_CMD;
+    } else {
+        code = HELP_CMD;
+}
 
-    if (code == -1) fprintf(stderr, "command %s not found!\n", argv[1]);
-    else {
+    if (code == -1) {
+        fprintf(stderr, "command %s not found!\n", argv[1]);
+    } else {
         printf("Showing help for command: %s\n", builtins[code].cmd);
         printf("-------------------------\n");
         printf("%s\n", builtins[code].help_text);
@@ -132,7 +137,9 @@ void print_help(int argc, char** argv)
     if (code == HELP_CMD) {
         int i;
         printf("All available commands:\n");
-        for (i = 0; i < BUILTINS_NUM; ++i) printf("%s\n", builtins[i].cmd);
+        for (i = 0; i < BUILTINS_NUM; ++i) {
+            printf("%s\n", builtins[i].cmd);
+}
     }
 }
 
@@ -143,8 +150,7 @@ void print_help(int argc, char** argv)
  * pr is used to free the last element. Once p is NULL, pr frees the last element
  * of the list.
  */
-void free_all()
-{
+void free_all() {
     process *p;
     process *pr;
     pr = head;
@@ -161,39 +167,42 @@ void free_all()
  *
  *
  */
-void shell_exit(int argc, char** argv)
-{
+void shell_exit(int argc, char **argv) {
     int exit_code = 0;
-    if (argc > 2) PRINT_BAD_ARGS_MSG(argv[0]);
-    if (argc == 2) exit_code = atoi(argv[1]);
-
-    free_all();
-    if (save_history_to_file) write_history(NULL);
-    exit(exit_code);
+    if (argc > 2)
+        PRINT_BAD_ARGS_MSG(argv[0]);
+    if (argc == 2) {
+        exit_code = atoi(argv[1]);
 }
 
+    free_all();
+    if (save_history_to_file) {
+        write_history(NULL);
+}
+    exit(exit_code);
+}
 
 /**
  * @brief Print a list of all active jobs. Theoritically including the foreground one.
  * @param argc unused.
  * @param argv unused.
  */
-void jobs_list(int argc, char** argv)
-{
+void jobs_list(int argc, char **argv) {
     process *p;
 
-    if (argc > 1) PRINT_BAD_ARGS_MSG(argv[0]);
+    if (argc > 1)
+        PRINT_BAD_ARGS_MSG(argv[0]);
 
     for (p = head; p != NULL; p = p->next) {
         if (p->pid) {
             /* ignore the master process */
-            printf("[%d] %s",
-                   p->pid,
-                   (p->completed) ? "COMPLETED" : "RUNNING");
+            printf("[%d] %s", p->pid, (p->completed) ? "COMPLETED" : "RUNNING");
             if (p->completed) {
                 /* currently this should never happen. */
                 printf(" status: %d\n", p->status);
-            } else printf("\n");
+            } else {
+                printf("\n");
+}
         }
     }
 }
@@ -211,8 +220,7 @@ void jobs_list(int argc, char** argv)
  * The total size neeeded to be allocated is calculated with strlen() and the final
  * string is created with strcat() calls.
  */
-void change_directory(int argc, char **argv)
-{
+void change_directory(int argc, char **argv) {
     if (argc == 1) {
         /* no arguments after 'cd', change directory to HOME */
         chdir(getenv("HOME"));
@@ -221,11 +229,13 @@ void change_directory(int argc, char **argv)
         /* 0 because:
          * strlen() + 1 gives an extra '1' for at argc-1 => +1 extra
          * we must include the null terminator but strlen doesn't include it => -1 */
-        size_t total_size = 0;  /*size in bytes that needs to be allocated */
-        char *full_dir; /* final result */
+        size_t total_size = 0; /*size in bytes that needs to be allocated */
+        char *full_dir;        /* final result */
         int i;
         /* start from argv[1] and calculate the total size with strlen() */
-        for (i = 1; i < argc; ++i) total_size += (strlen(argv[i]) + 1) * sizeof(char);
+        for (i = 1; i < argc; ++i) {
+            total_size += (strlen(argv[i]) + 1) * sizeof(char);
+}
         full_dir = malloc(total_size); /* allocate the calculated size */
         strcpy(full_dir, argv[1]);     /* strcpy the first string */
         for (i = 2; i < argc; ++i) {
@@ -233,7 +243,7 @@ void change_directory(int argc, char **argv)
             strcat(full_dir, argv[i]); /* use strcat() to append the next string */
         }
         /* call the chdir() command and detect errors */
-        if ((chdir(full_dir) ) == -1) {
+        if ((chdir(full_dir)) == -1) {
             /* error in chdir */
             perror(argv[0]);
         }
@@ -249,21 +259,19 @@ void change_directory(int argc, char **argv)
  *
  *
  */
-void call_builtin(int code, int argc, char** argv)
-{
-    builtins[code].action(argc, argv);
-}
+void call_builtin(int code, int argc, char **argv) { builtins[code].action(argc, argv); }
 
 /**
  * @brief check if a string is a builtin.
  * @param cmd the string to be checked.
  * @returns -1 if the command was not found. The code of the builtin if the command was found.
  */
-int check_if_builtin(char *cmd)
-{
+int check_if_builtin(char *cmd) {
     int code;
     for (code = 0; code < BUILTINS_NUM; ++code) {
-        if (strcmp(builtins[code].cmd, cmd) == 0) return code;
+        if (strcmp(builtins[code].cmd, cmd) == 0) {
+            return code;
+}
     }
     return -1;
 }
